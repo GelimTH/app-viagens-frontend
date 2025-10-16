@@ -10,13 +10,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom"; // Importe o Link
 import { Button } from "@/components/ui/button"; // Importe o Button
-
-const statusConfig = {
-  em_analise: { label: "Em Análise", color: "bg-orange-100 text-orange-800 border-orange-200" },
-  aprovado: { label: "Aprovado", color: "bg-green-100 text-green-800 border-green-200" },
-  pendente: { label: "Pendente", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  reprovado: { label: "Reprovado", color: "bg-red-100 text-red-800 border-red-200" }
-};
+import { statusConfig } from "@/lib/utils";
 
 export default function Historico() {
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -82,7 +76,7 @@ export default function Historico() {
                         <h3 className="text-xl font-bold text-slate-900">
                           {viagem.destino}
                         </h3>
-                        <Badge className={`${statusConfig[viagem.status]?.color} border`}>
+                        <Badge variant={statusConfig[viagem.status]?.variant || 'default'} className="border">
                           {statusConfig[viagem.status]?.label}
                         </Badge>
                       </div>

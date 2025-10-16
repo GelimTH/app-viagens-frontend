@@ -42,4 +42,32 @@ export const api = {
     const response = await apiClient.patch(`/viagens/${id}`, dadosDaViagem);
     return response.data;
   },
+
+  createDespesa: async (despesaData) => {
+    const response = await apiClient.post('/despesas', despesaData);
+    return response.data;
+  },
+
+  askChatbot: async (dados) => {
+    // `dados` será um objeto como: { pergunta: "Qual o status da minha viagem?" }
+    const response = await apiClient.post('/chatbot/ask', dados);
+    return response.data; // Esperamos uma resposta como: { resposta: "..." }
+  },
+  
+  getDespesas: async (viagemId) => {
+    const response = await apiClient.get('/despesas', {
+      params: { viagemId } // Envia o viagemId como um query param
+    });
+    return response.data;
+  },
+
+  getPendingDespesas: async () => {
+    const response = await apiClient.get('/despesas/pendentes');
+    return response.data;
+  },
+
+  updateDespesa: async ({ id, status }) => {
+    const response = await apiClient.patch(`/despesas/${id}`, { status });
+    return response.data;
+  },
 };

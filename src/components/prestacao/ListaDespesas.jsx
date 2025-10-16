@@ -1,15 +1,11 @@
+// src/components/prestacao/ListaDespesas.jsx
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-const statusConfig = {
-  pendente: { label: "Pendente", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  aprovado: { label: "Aprovado", color: "bg-green-100 text-green-800 border-green-200" },
-  reprovado: { label: "Reprovado", color: "bg-red-100 text-red-800 border-red-200" }
-};
+import { formatarMoeda, statusConfig } from "@/lib/utils";
 
 const tipoLabels = {
   transporte: "Transporte",
@@ -34,7 +30,7 @@ export default function ListaDespesas({ despesas }) {
           <div className="text-right">
             <p className="text-sm text-slate-500">Total</p>
             <p className="text-2xl font-bold text-green-600">
-              R$ {totalDespesas.toFixed(2)}
+              {formatarMoeda(totalDespesas)}
             </p>
           </div>
         </div>
@@ -56,18 +52,21 @@ export default function ListaDespesas({ despesas }) {
                     <p className="font-bold text-slate-900">{tipoLabels[despesa.tipo]}</p>
                     <p className="text-sm text-slate-600">{despesa.descricao}</p>
                   </div>
-                  <Badge className={`${statusConfig[despesa.status].color} border`}>
-                    {statusConfig[despesa.status].label}
+                  {/* 3. MUDANÇA AQUI: Usando a prop `variant` */}
+                  <Badge variant={statusConfig[despesa.status]?.variant || 'default'} className="border">
+                    {statusConfig[despesa.status]?.label}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex gap-4 text-sm text-slate-500">
                     <span>{format(new Date(despesa.data), "dd/MM/yyyy", { locale: ptBR })}</span>
-                    <span className="font-bold text-green-600">R$ {despesa.valor?.toFixed(2)}</span>
+                    <span className="font-bold text-green-600">
+                      {formatarMoeda(despesa.valor)}
+                    </span>
                   </div>
-                  {despesa.nota_fiscal_url && (
+                  {despesa.notaFiscalUrl && (
                     <a
-                      href={despesa.nota_fiscal_url}
+                      href={despesa.notaFiscalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800"

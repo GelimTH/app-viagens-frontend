@@ -1,68 +1,84 @@
+// src/components/prestacao/UploadNota.jsx
 import React, { useState, useRef } from "react";
 import { api } from "@/api/apiClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NumericFormat } from 'react-number-format';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Upload, X, Loader2, CheckCircle } from "lucide-react";
+import { X, Loader2, CheckCircle, Sparkles, Paperclip, FileText, DollarSign, Calendar } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function UploadNota({ viagemId, onCancelar, onSucesso }) {
-  const [arquivo, setArquivo] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [processando, setProcessando] = useState(false);
-  const [dadosExtraidos, setDadosExtraidos] = useState(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+  const [processandoIA, setProcessandoIA] = useState(false);
+  const [arquivo, setArquivo] = useState(null);
+
+  // Estado para controlar todos os campos do formulário
+  const [dadosDespesa, setDadosDespesa] = useState({
+    tipo: "",
+    valor: "",
+    data: "",
+    descricao: "",
+    nota_fiscal_url: ""
+  });
+
+  const handleFieldChange = (field, value) => {
+    setDadosDespesa(prev => ({ ...prev, [field]: value }));
+  };
 
   const criarDespesaMutation = useMutation({
-    mutationFn: (despesaData) => api.entities.Despesa.create(despesaData),
+    mutationFn: (despesaData) => api.createDespesa(despesaData), // Supondo que você tenha essa função na API
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['despesas'] });
+      queryClient.invalidateQueries({ queryKey: ['despesas', viagemId] });
       onSucesso();
     },
+    onError: () => {
+      alert("Erro ao salvar despesa. Verifique os dados e tente novamente.");
+    }
   });
 
   const handleArquivoSelecionado = async (file) => {
+    if (!file) return;
     setArquivo(file);
-    setPreview(URL.createObjectURL(file));
-    setProcessando(true);
+    setProcessandoIA(true);
 
     try {
-      const { file_url } = await api.integrations.Core.UploadFile({ file });
+      // Simulação de upload e extração com IA
+      // Em um app real, aqui você faria as chamadas de API para upload e OCR
+      await new Promise(resolve => setTimeout(resolve, 1500)); 
+      
+      const resultadoIA = {
+        valor: 150.75,
+        data: "2025-10-16",
+        descricao: "Jantar com cliente",
+        tipo: "alimentacao"
+      };
 
-      const resultado = await api.integrations.Core.ExtractDataFromUploadedFile({
-        file_url,
-        json_schema: {
-          type: "object",
-          properties: {
-            valor: { type: "number" },
-            data: { type: "string" },
-            descricao: { type: "string" },
-            tipo: { type: "string" }
-          }
-        }
-      });
+      // Preenche o formulário com os dados da IA
+      setDadosDespesa(prev => ({
+        ...prev,
+        ...resultadoIA,
+        valor: resultadoIA.valor.toString(),
+      }));
 
-      if (resultado.status === "success" && resultado.output) {
-        setDadosExtraidos({
-          ...resultado.output,
-          nota_fiscal_url: file_url
-        });
-      }
     } catch (error) {
       console.error("Erro ao processar nota:", error);
+    } finally {
+      setProcessandoIA(false);
     }
-
-    setProcessando(false);
   };
 
-  const handleSalvar = async () => {
-    await criarDespesaMutation.mutateAsync({
+  const handleSalvar = async (e) => {
+    e.preventDefault();
+    criarDespesaMutation.mutate({
       viagem_id: viagemId,
-      ...dadosExtraidos,
+      ...dadosDespesa,
+      valor: parseFloat(dadosDespesa.valor),
       status: "pendente"
     });
   };
@@ -77,152 +93,93 @@ export default function UploadNota({ viagemId, onCancelar, onSucesso }) {
           <X className="w-5 h-5" />
         </Button>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
-        {!arquivo && (
-          <div className="space-y-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.pdf"
-              onChange={(e) => handleArquivoSelecionado(e.target.files[0])}
-              className="hidden"
-            />
-            
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full p-8 border-2 border-dashed border-slate-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all"
-            >
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Camera className="w-8 h-8 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 mb-1">
-                    Tire uma foto ou faça upload
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    A IA reconhecerá os dados automaticamente
-                  </p>
-                </div>
-              </div>
-            </button>
+      <CardContent className="p-6">
+        <form onSubmit={handleSalvar} className="space-y-6">
+          {/* Botão da IA */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(e) => handleArquivoSelecionado(e.target.files[0])}
+            className="hidden"
+          />
+          <Button type="button" variant="outline" className="w-full h-12 text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => fileInputRef.current?.click()}>
+            {processandoIA ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            {processandoIA ? "Analisando imagem..." : "Ou, extraia os dados de uma foto com IA"}
+          </Button>
+
+          {processandoIA && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertDescription className="text-sm text-blue-700">
+                Aguarde, nossa IA está lendo as informações da sua nota fiscal...
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Formulário Convencional */}
+          <div className="space-y-2">
+            <Label htmlFor="tipo">Tipo de Despesa</Label>
+            <Select required value={dadosDespesa.tipo} onValueChange={(value) => handleFieldChange('tipo', value)}>
+              <SelectTrigger id="tipo"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="transporte">Transporte</SelectItem>
+                <SelectItem value="hospedagem">Hospedagem</SelectItem>
+                <SelectItem value="alimentacao">Alimentação</SelectItem>
+                <SelectItem value="outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
 
-        {arquivo && (
-          <>
-            {preview && (
-              <div className="relative">
-                <img 
-                  src={preview} 
-                  alt="Preview" 
-                  className="w-full max-h-64 object-contain rounded-lg border border-slate-200"
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="valor" className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-slate-500" />Valor</Label>
+              <NumericFormat
+                  id="valor"
+                  customInput={Input}
+                  placeholder="R$ 0,00"
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="R$ "
+                  decimalScale={2}
+                  fixedDecimalScale
+                  value={dadosDespesa.valor || ""}
+                  onValueChange={(values) => {
+                    handleFieldChange('valor', values.floatValue); 
+                  }}
+                  required
                 />
-              </div>
-            )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data" className="flex items-center gap-2"><Calendar className="w-4 h-4 text-slate-500" />Data</Label>
+              <Input id="data" type="date" required value={dadosDespesa.data} onChange={(e) => handleFieldChange('data', e.target.value)} />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="descricao" className="flex items-center gap-2"><FileText className="w-4 h-4 text-slate-500" />Descrição (Opcional)</Label>
+            <Textarea id="descricao" placeholder="Ex: Jantar com o cliente XYZ" value={dadosDespesa.descricao} onChange={(e) => handleFieldChange('descricao', e.target.value)} />
+          </div>
 
-            {processando && (
-              <Alert className="bg-blue-50 border-blue-200">
-                <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
-                <AlertDescription>
-                  IA processando a nota fiscal...
-                </AlertDescription>
-              </Alert>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="anexo" className="flex items-center gap-2"><Paperclip className="w-4 h-4 text-slate-500" />Anexar Nota Fiscal (Opcional)</Label>
+            <Input id="anexo" type="file" />
+          </div>
 
-            {dadosExtraidos && !processando && (
-              <>
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <AlertDescription>
-                    Dados extraídos com sucesso! Confira e edite se necessário.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="tipo">Tipo de Despesa</Label>
-                    <Select
-                      value={dadosExtraidos.tipo}
-                      onValueChange={(value) => setDadosExtraidos({ ...dadosExtraidos, tipo: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="transporte">Transporte</SelectItem>
-                        <SelectItem value="hospedagem">Hospedagem</SelectItem>
-                        <SelectItem value="alimentacao">Alimentação</SelectItem>
-                        <SelectItem value="combustivel">Combustível</SelectItem>
-                        <SelectItem value="pedagio">Pedágio</SelectItem>
-                        <SelectItem value="estacionamento">Estacionamento</SelectItem>
-                        <SelectItem value="outros">Outros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="valor">Valor</Label>
-                      <Input
-                        id="valor"
-                        type="number"
-                        step="0.01"
-                        value={dadosExtraidos.valor}
-                        onChange={(e) => setDadosExtraidos({ ...dadosExtraidos, valor: parseFloat(e.target.value) })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="data">Data</Label>
-                      <Input
-                        id="data"
-                        type="date"
-                        value={dadosExtraidos.data}
-                        onChange={(e) => setDadosExtraidos({ ...dadosExtraidos, data: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="descricao">Descrição</Label>
-                    <Input
-                      id="descricao"
-                      value={dadosExtraidos.descricao}
-                      onChange={(e) => setDadosExtraidos({ ...dadosExtraidos, descricao: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={onCancelar}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleSalvar}
-                    disabled={criarDespesaMutation.isPending}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700"
-                  >
-                    {criarDespesaMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Salvando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Salvar Despesa
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </>
-            )}
-          </>
-        )}
+          {/* Ações */}
+          <div className="flex gap-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={onCancelar} className="w-full">
+              Cancelar
+            </Button>
+            <Button type="submit" className="w-full" disabled={criarDespesaMutation.isPending}>
+              {criarDespesaMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+              Salvar Despesa
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

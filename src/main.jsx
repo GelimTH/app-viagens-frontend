@@ -17,6 +17,7 @@ import Perfil from './pages/Perfil.jsx';
 //import ChatIA from './pages/ChatIA.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import EditarViagem from './pages/EditarViagem.jsx';
+import Aprovacoes from './pages/Aprovacoes.jsx';
 
 // Crie uma instância do "gerenciador" de queries
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="novaviagem" element={<NovaViagem />} />
               <Route path="prestacaocontas" element={<PrestacaoContas />} />
+              <Route path="aprovacoes" element={<Aprovacoes />} />
               <Route path="historico" element={<Historico />} />
               <Route path="perfil" element={<Perfil />} />
               {/*<Route path="chatia" element={<ChatIA />} />*/}

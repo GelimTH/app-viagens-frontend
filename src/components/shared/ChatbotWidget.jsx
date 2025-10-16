@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, X, Send, User } from 'lucide-react';
+import { api } from '@/api/apiClient';
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,21 +28,34 @@ export default function ChatbotWidget() {
     mensagensEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleEnviar = async () => {
+const handleEnviar = async () => {
     if (!inputMensagem.trim() || carregando) return;
-    const novaMensagem = inputMensagem;
+
+    const novaMensagemUsuario = { tipo: "usuario", texto: inputMensagem };
+    setMensagens(prev => [...prev, novaMensagemUsuario]);
+    const pergunta = inputMensagem;
     setInputMensagem("");
-    setMensagens(prev => [...prev, { tipo: "usuario", texto: novaMensagem }]);
     setCarregando(true);
-    setTimeout(() => {
-      setMensagens(prev => [...prev, { tipo: "bot", texto: "Esta é uma resposta simulada." }]);
+
+    try {
+      // Simula um tempo mínimo de "pensamento" para a IA
+      const [respostaDoBot] = await Promise.all([
+        api.askChatbot({ pergunta }),
+        new Promise(resolve => setTimeout(resolve, 750)) // Atraso de 750ms
+      ]);
+
+      setMensagens(prev => [...prev, { tipo: "bot", texto: respostaDoBot.resposta }]);
+    } catch (error) {
+      console.error("Erro ao falar com o chatbot:", error);
+      setMensagens(prev => [...prev, { tipo: "bot", texto: "Desculpe, não consegui me conectar. Tente novamente." }]);
+    } finally {
       setCarregando(false);
-    }, 2000);
+    }
   };
 
   return (
     <>
-      {/* ===== Botão Flutuante (sempre visível e no mesmo lugar) ===== */}
+      {/* ===== Botão Flutuante (permanece o mesmo) ===== */}
       <div className="fixed bottom-4 right-4 z-[60]">
         <Button
           onClick={() => setIsOpen(!isOpen)}
@@ -51,38 +65,21 @@ export default function ChatbotWidget() {
         </Button>
       </div>
 
-      {/* ===== Janela de Chat e Overlay (Toda esta secção é nova) ===== */}
+      {/* ===== Janela de Chat (MODIFICADA) ===== */}
+      {/* A MUDANÇA ESTÁ AQUI: 
+        - Removemos o container de tela cheia (que tinha 'fixed inset-0').
+        - Removemos o 'overlay' escuro.
+        - Aplicamos o posicionamento e a animação diretamente no container do Card.
+        - Adicionamos 'pointer-events-none' quando o chat está fechado.
+      */}
       <div
-        // Controla a visibilidade e a animação de fade
-        className={`fixed inset-0 z-50 flex transition-opacity duration-300
-                    ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-                    
-                    // Comportamento para MOBILE (por defeito): centralizado
-                    items-center justify-center
-                    
-                    // Comportamento para DESKTOP (sm: e maior): no canto inferior direito
-                    sm:items-end sm:justify-end sm:p-4`}
+        className={`fixed bottom-20 right-4 z-50 transition-all duration-300 ease-in-out
+                    ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}
       >
-        {/* Overlay escuro (só para mobile, para clicar e fechar) */}
-        <div 
-            className="absolute inset-0 bg-black/40 sm:hidden"
-            onClick={() => setIsOpen(false)}
-        ></div>
-
-        {/* Card do Chat (com animação e estilos responsivos) */}
-        <div
-          // Animação de entrada (zoom e fade)
-          className={`transition-all duration-300 ease-in-out
-                      ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+        <Card 
+          className="w-[90vw] max-w-lg h-[80vh] flex flex-col shadow-2xl 
+                     sm:w-96 sm:h-[60vh] sm:max-h-[700px]"
         >
-          <Card 
-            // Estilos para MOBILE: Ocupa 90% da largura/altura do ecrã
-            className="w-[90vw] max-w-lg h-[80vh] flex flex-col shadow-2xl relative
-                       
-                       // Estilos para DESKTOP: Fica mais pequeno e no canto
-                       sm:w-96 sm:h-[60vh] sm:max-h-[700px] sm:mb-20"
-            onClick={(e) => e.stopPropagation()} // Impede que clicar no card feche o chat
-          >
             <CardHeader className="flex flex-row items-center justify-between p-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Bot className="w-5 h-5" />
@@ -113,8 +110,7 @@ export default function ChatbotWidget() {
                     <Button onClick={handleEnviar} disabled={carregando || !inputMensagem.trim()}><Send className="w-4 h-4" /></Button>
                 </div>
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
     </>
   );

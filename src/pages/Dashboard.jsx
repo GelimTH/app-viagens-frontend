@@ -1,23 +1,15 @@
 import React from "react";
 import { api } from "@/api/apiClient";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import {
   Plane,
-  TrendingUp,
   Clock,
   CheckCircle,
   AlertCircle,
   Plus,
-  Calendar,
-  MapPin
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 import StatsCard from "../components/dashboard/StatsCard";
 import ProximasViagens from "../components/dashboard/ProximasViagens";
@@ -27,7 +19,6 @@ import PendenciasCard from "../components/dashboard/PendenciasCard";
 export default function Dashboard() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
-    // Mude para a função que busca o usuário
     queryFn: api.getCurrentUser
   });
 
@@ -37,32 +28,24 @@ export default function Dashboard() {
     initialData: [],
   });
 
-  // ADICIONE ESTA LINHA AQUI!
-  console.log('Dados de viagens recebidos:', viagens);
-
-const { data: despesas = [] } = useQuery({
-    queryKey: ['despesas'],
-    // Esta rota ainda não existe, então vamos mockar por enquanto
-    queryFn: () => Promise.resolve([]), 
-    initialData: [],
-  });
-
+  // A lógica para calcular os totais continua a mesma
   const viagensEmAnalise = viagens.filter(v => v.status === 'em_analise').length;
   const viagensAprovadas = viagens.filter(v => v.status === 'aprovado').length;
-  const despesasPendentes = despesas.filter(d => d.status === 'pendente').length;
+  const despesasPendentes = 0; // Mantendo como 0 por enquanto
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-6 md:p-8">
+    // A CORREÇÃO ESTÁ AQUI: Removemos `min-h-screen` e o `bg-gradient-*` do div principal
+    <div className="p-6 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-              Olá, {user?.full_name?.split(' ')[0] || 'Colaborador'} 👋
+              Olá, {user?.fullName?.split(' ')[0] || 'Colaborador'} 👋
             </h1>
             <p className="text-slate-600">Aqui está um resumo das suas viagens</p>
           </div>
-          <Link to={createPageUrl("NovaViagem")}>
+          <Link to="/app/novaviagem">
             <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-200 text-white">
               <Plus className="w-5 h-5 mr-2" />
               Nova Viagem
@@ -77,7 +60,7 @@ const { data: despesas = [] } = useQuery({
             value={viagens.length}
             icon={Plane}
             color="blue"
-            trend="+12% este mês"
+            trend="+17% este mês"
           />
           <StatsCard
             title="Em Análise"
@@ -90,7 +73,7 @@ const { data: despesas = [] } = useQuery({
             value={viagensAprovadas}
             icon={CheckCircle}
             color="green"
-            trend="92% aprovação"
+            trend="93% aprovação"
           />
           <StatsCard
             title="Despesas Pendentes"

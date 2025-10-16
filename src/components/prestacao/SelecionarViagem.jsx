@@ -1,9 +1,13 @@
+// src/components/prestacao/SelecionarViagem.jsx
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+// 1. Importe a configuração de status
+import { statusConfig } from "@/lib/utils";
 
 export default function SelecionarViagem({ viagens, onSelecionar }) {
   return (
@@ -38,12 +42,13 @@ export default function SelecionarViagem({ viagens, onSelecionar }) {
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Calendar className="w-4 h-4" />
                       <span>
-                        {format(new Date(viagem.data_ida), "dd MMM", { locale: ptBR })} - {format(new Date(viagem.data_volta), "dd MMM yyyy", { locale: ptBR })}
+                        {format(new Date(viagem.dataIda), "dd MMM", { locale: ptBR })} - {format(new Date(viagem.dataVolta), "dd MMM yyyy", { locale: ptBR })}
                       </span>
                     </div>
                   </div>
-                  <Badge className="bg-green-100 text-green-800 border-green-200 border">
-                    Aprovada
+                  {/* 2. MUDANÇA AQUI: Usando a prop `variant` para a badge */}
+                  <Badge variant={statusConfig[viagem.status]?.variant || 'default'} className="border">
+                    {statusConfig[viagem.status]?.label}
                   </Badge>
                 </div>
               </button>

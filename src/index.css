@@ -69,3 +69,38 @@
     height: 100%;
   }
 }
+
+#root {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+  height: 100%; /* Garante que o root ocupe a altura toda */
+}
+
+/* Estilização da Barra de Rolagem (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* slate-300 */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8; /* slate-400 */
+}
+
+/* Estilização da Barra de Rolagem (Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent; /* thumb e track */
+}

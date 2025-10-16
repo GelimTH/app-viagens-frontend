@@ -6,13 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-const statusConfig = {
-  em_analise: { label: "Em Análise", color: "bg-orange-100 text-orange-800 border-orange-200" },
-  aprovado: { label: "Aprovado", color: "bg-green-100 text-green-800 border-green-200" },
-  pendente: { label: "Pendente", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  reprovado: { label: "Reprovado", color: "bg-red-100 text-red-800 border-red-200" }
-};
+import { statusConfig } from "@/lib/utils";
 
 export default function ProximasViagens({ viagens }) {
   // DEBUG 1: Ver o que o componente recebeu
@@ -38,10 +32,10 @@ export default function ProximasViagens({ viagens }) {
           <div className="space-y-4">
             {proximasViagens.map((viagem) => {
               // DEBUG 2: Ver o valor e o tipo exato da data antes de formatar
-              console.log('[ProximasViagens] Tentando formatar data_ida:', viagem.data_ida, 'Tipo:', typeof viagem.data_ida);
-              
+              console.log('[ProximasViagens] Tentando formatar dataIda:', viagem.dataIda, 'Tipo:', typeof viagem.dataIda);
+
               return (
-                <div 
+                <div
                   key={viagem.id}
                   className="p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 bg-slate-50"
                 >
@@ -55,7 +49,7 @@ export default function ProximasViagens({ viagens }) {
                       </div>
                       <p className="text-sm text-slate-600 mb-2">{viagem.motivo}</p>
                     </div>
-                    <Badge className={`${statusConfig[viagem.status].color} border`}>
+                    <Badge variant={statusConfig[viagem.status].variant} className="border">
                       {statusConfig[viagem.status].label}
                     </Badge>
                   </div>

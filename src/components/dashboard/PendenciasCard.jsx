@@ -39,7 +39,7 @@ export default function PendenciasCard({ despesasPendentes, viagensEmAnalise }) 
                   </div>
                 </div>
                 <p className="text-sm text-slate-600 mb-3">Aguardando aprovação</p>
-                <Link to={createPageUrl("Historico")}>
+                <Link to="/app/aprovacoes">
                   <Button variant="outline" className="w-full border-orange-200 hover:bg-orange-50" size="sm">
                     Ver Detalhes
                     <ArrowRight className="w-4 h-4 ml-2" />

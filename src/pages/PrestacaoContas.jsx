@@ -1,9 +1,9 @@
+// src/pages/PrestacaoContas.jsx
 import React, { useState } from "react";
 import { api } from "@/api/apiClient";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { FileText, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FileText, Upload, Camera } from "lucide-react";
 
 import SelecionarViagem from "../components/prestacao/SelecionarViagem";
 import UploadNota from "../components/prestacao/UploadNota";
@@ -13,17 +13,19 @@ export default function PrestacaoContas() {
   const [viagemSelecionada, setViagemSelecionada] = useState(null);
   const [mostrarUpload, setMostrarUpload] = useState(false);
 
-  const { data: viagens = [] } = useQuery({
+  // Busca as viagens aprovadas para a lista de seleção
+  const { data: todasAsViagens = [] } = useQuery({
     queryKey: ['viagens'],
-    queryFn: () => api.entities.Viagem.filter({ status: 'aprovado' }, '-data_ida'),
-    initialData: [],
+    queryFn: api.getViagens,
   });
+  const viagensAprovadas = todasAsViagens.filter(v => v.status === 'aprovado');
 
+  // CORREÇÃO AQUI: Agora estamos buscando as despesas da viagem selecionada
   const { data: despesas = [] } = useQuery({
     queryKey: ['despesas', viagemSelecionada?.id],
-    queryFn: () => api.entities.Despesa.filter({ viagem_id: viagemSelecionada.id }),
+    queryFn: () => api.getDespesas(viagemSelecionada.id), // Usando a nova função
+    // `enabled` garante que a busca só aconteça QUANDO uma viagem for selecionada
     enabled: !!viagemSelecionada,
-    initialData: [],
   });
 
   return (
@@ -40,15 +42,13 @@ export default function PrestacaoContas() {
           </div>
         </div>
 
-        {/* Selecionar Viagem */}
         {!viagemSelecionada && (
           <SelecionarViagem 
-            viagens={viagens}
+            viagens={viagensAprovadas}
             onSelecionar={setViagemSelecionada}
           />
         )}
 
-        {/* Upload e Lista */}
         {viagemSelecionada && (
           <>
             <div className="flex justify-between items-center">
@@ -61,16 +61,10 @@ export default function PrestacaoContas() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setViagemSelecionada(null)}
-                >
+                <Button variant="outline" onClick={() => { setViagemSelecionada(null); setMostrarUpload(false); }}>
                   Trocar Viagem
                 </Button>
-                <Button
-                  onClick={() => setMostrarUpload(true)}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-200 text-white"
-                >
+                <Button onClick={() => setMostrarUpload(true)} >
                   <Camera className="w-4 h-4 mr-2" />
                   Nova Despesa
                 </Button>
@@ -84,7 +78,8 @@ export default function PrestacaoContas() {
                 onSucesso={() => setMostrarUpload(false)}
               />
             )}
-
+            
+            {/* Agora este componente receberá a lista de despesas correta */}
             <ListaDespesas despesas={despesas} />
           </>
         )}
