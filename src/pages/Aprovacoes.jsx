@@ -91,7 +91,7 @@ export default function Aprovacoes() {
   });
 
   const updateDespesaStatus = useMutation({
-    mutationFn: api.updateDespesa,
+    mutationFn: api.updateDespesaStatus,
     onSuccess: () => {
       // Invalida tanto a busca de despesas pendentes quanto a de viagens (para o dashboard)
       queryClient.invalidateQueries({ queryKey: ['pendingDespesas'] });

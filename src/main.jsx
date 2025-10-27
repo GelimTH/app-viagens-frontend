@@ -16,8 +16,12 @@ import Historico from './pages/Historico.jsx';
 import Perfil from './pages/Perfil.jsx';
 //import ChatIA from './pages/ChatIA.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
+import RegisterVisitante from './pages/RegisterVisitante.jsx';
+import MinhaViagem from './pages/MinhaViagem.jsx';
 import EditarViagem from './pages/EditarViagem.jsx';
 import Aprovacoes from './pages/Aprovacoes.jsx';
+import EditarDespesa from './pages/EditarDespesa.jsx';
 
 // Crie uma instância do "gerenciador" de queries
 const queryClient = new QueryClient();
@@ -30,6 +34,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Routes>
             {/* A rota principal "/" agora é a LoginPage */}
             <Route path="/" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register-visitante" element={<RegisterVisitante />} />
             
             {/* O resto do aplicativo agora vive dentro de "/app" */}
             <Route path="/app" element={<App />}>
@@ -43,6 +49,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="perfil" element={<Perfil />} />
               {/*<Route path="chatia" element={<ChatIA />} />*/}
               <Route path="viagens/editar/:id" element={<EditarViagem />} />
+              <Route path="despesas/editar/:id" element={<EditarDespesa />} />
+              <Route path="minha-viagem" element={<MinhaViagem />} />
             </Route>
           </Routes>
         </SidebarProvider> {/* 2. LINHA ADICIONADA */}

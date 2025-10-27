@@ -1,98 +1,305 @@
 // src/pages/LoginPage.jsx
+// VERSÃO CORRIGIDA (sem <style jsx>)
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/api/apiClient';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plane, AlertCircle } from 'lucide-react'; // Importe o ícone de alerta
+import { AlertCircle, Eye, EyeOff, Plane, Loader2 } from 'lucide-react';
+import { User, Building, Mail, Lock, Key } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(''); // Novo estado para controlar a mensagem de erro
+  const [activeTab, setActiveTab] = useState('colaborador');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showToken, setShowToken] = useState(false);
+
+  // --- Lógica de Estado ---
+  const [collaboratorEmail, setCollaboratorEmail] = useState('');
+  const [collaboratorPassword, setCollaboratorPassword] = useState('');
+  const [collaboratorError, setCollaboratorError] = useState('');
+  const [collaboratorLoading, setCollaboratorLoading] = useState(false); // Loading para Colaborador
+
+  const [externalEmail, setExternalEmail] = useState('');
+  const [externalToken, setExternalToken] = useState('');
+  const [externalError, setExternalError] = useState('');
+  const [externalLoading, setExternalLoading] = useState(false); // Loading para Visitante
+
   const navigate = useNavigate();
+  // -----------------------
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(''); // Limpa o erro ao tentar fazer login novamente
-
-    try {
-      const response = await api.login({ email, password });
-      console.log('Login bem-sucedido:', response);
-
-      // Futuramente, aqui é onde você guardaria o token
-      // localStorage.setItem('authToken', response.token);
-
-      // Não há mais alerta de sucesso, apenas redireciona
-      navigate('/app/dashboard');
-    } catch (err) {
-      console.error('Erro no login:', err);
-      // Define a mensagem de erro no estado
-      setError('Email ou senha inválidos.');
-    }
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+  const toggleTokenVisibility = () => {
+    setShowToken(!showToken);
   };
 
+  // --- Lógica de Login (Colaborador) ---
+  const handleCollaboratorSubmit = async (e) => {
+    e.preventDefault();
+    setCollaboratorError('');
+    setCollaboratorLoading(true);
+
+    try {
+      const response = await api.login({ email: collaboratorEmail, password: collaboratorPassword });
+      localStorage.setItem('authToken', response.token); // Salva o token
+
+      // ===========================================
+      // ATUALIZAÇÃO DO REDIRECIONAMENTO
+      // ===========================================
+      if (response.user.role === 'VISITANTE') {
+        navigate('/app/minha-viagem');
+      } else {
+        navigate('/app/dashboard');
+      }
+    } catch (err) {
+      console.error('Erro no login do Colaborador:', err);
+      setCollaboratorError('Email ou senha inválidos.');
+      setCollaboratorLoading(false); // Desativa o loading no erro
+    }
+    // Não desative o loading no sucesso, pois a página vai navegar
+  };
+
+  // --- Lógica de Login (Visitante) ---
+  const handleExternalSubmit = async (e) => {
+    e.preventDefault();
+    setExternalError('');
+    setExternalLoading(true);
+
+    try {
+      // Usa a API de login real
+      const response = await api.login({ email: externalEmail, password: externalToken });
+      localStorage.setItem('authToken', response.token); // Salva o token
+
+      // ===========================================
+      // ATUALIZAÇÃO DO REDIRECIONAMENTO
+      // ===========================================
+      if (response.user.role === 'VISITANTE') {
+        navigate('/app/minha-viagem');
+      } else {
+        // (Caso um colaborador tente logar na aba de visitante)
+        navigate('/app/dashboard');
+      }
+    } catch (err) {
+      console.error('Erro no login do Visitante:', err);
+      setExternalError('Email ou Token de Acesso inválido.');
+      setExternalLoading(false); // Para o loading no erro
+    }
+  };
+  // -------------------------------------------------
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <Card className="w-full max-w-sm shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center items-center gap-3 mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+
+          <div className="flex justify-center items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
               <Plane className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-2xl text-slate-900">Viagens</h2>
+              <h2 className="font-bold text-xl text-slate-900">Embarque Coração</h2>
+              <p className="text-xs text-slate-500 font-medium">SGV - Sistema Gestor de Viagem</p>
             </div>
           </div>
-          <CardTitle className="text-2xl">Acesse sua conta</CardTitle>
-          <CardDescription>Entre com suas credenciais para continuar</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  // Aplica a borda vermelha se houver erro
-                  className={error ? 'border-red-500' : ''}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  required 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  // Aplica a borda vermelha se houver erro
-                  className={error ? 'border-red-500' : ''}
-                />
-              </div>
 
-              {/* Mostra a mensagem de erro aqui, se existir */}
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{error}</span>
+          <div className="flex mb-8 bg-slate-100 rounded-xl p-1">
+            <button
+              onClick={() => setActiveTab('colaborador')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === 'colaborador'
+                ? 'bg-white text-blue-600 shadow'
+                : 'text-slate-600 hover:text-slate-800'
+                }`}
+            >
+              Colaborador
+            </button>
+            <button
+              onClick={() => setActiveTab('visitante')}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === 'visitante'
+                ? 'bg-white text-green-600 shadow'
+                : 'text-slate-600 hover:text-slate-800'
+                }`}
+            >
+              Visitante
+            </button>
+          </div>
+
+          {/* Content Area */}
+          <div className="transition-all duration-300 ease-in-out">
+            {activeTab === 'colaborador' && (
+              <div className="animate-fadeIn">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-8 h-8 text-blue-600" />
+                  </div>
                 </div>
-              )}
+                <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                  Acesso Colaborador
+                </h2>
+                <p className="text-gray-600 text-center mb-8">
+                  Sou da equipe interna
+                </p>
 
-              <Button type="submit" className="w-full mt-2">
-                Entrar
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                <form onSubmit={handleCollaboratorSubmit} className="space-y-6">
+                  {/* ... (Input de Email) ... */}
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="E-mail Corporativo / Matrícula"
+                      value={collaboratorEmail}
+                      onChange={(e) => setCollaboratorEmail(e.target.value)}
+                      required
+                      disabled={collaboratorLoading}
+                      className={`w-full pl-12 pr-4 py-4 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${collaboratorError
+                        ? 'border-red-500 ring-red-500'
+                        : 'border-gray-200 focus:ring-blue-500'
+                        }`}
+                    />
+                  </div>
+
+                  {/* ... (Input de Senha) ... */}
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Senha"
+                      value={collaboratorPassword}
+                      onChange={(e) => setCollaboratorPassword(e.target.value)}
+                      required
+                      disabled={collaboratorLoading}
+                      className={`w-full pl-12 pr-12 py-4 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${collaboratorError
+                        ? 'border-red-500 ring-red-500'
+                        : 'border-gray-200 focus:ring-blue-500'
+                        }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {collaboratorError && (
+                    <div className="flex items-center gap-2 text-sm text-red-600">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{collaboratorError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={collaboratorLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-200 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center disabled:opacity-70"
+                  >
+                    {collaboratorLoading && <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
+                    {collaboratorLoading ? "Entrando..." : "Entrar"}
+                  </button>
+
+                  <div className="text-center">
+                    <Link to="/register" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      Não tem uma conta? Cadastre-se
+                    </Link>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {activeTab === 'visitante' && (
+              <div className="animate-fadeIn">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <Building className="w-8 h-8 text-green-600" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                  Acesso de Visitante
+                </h2>
+                <p className="text-gray-600 text-center mb-8">
+                  Sou externo / cliente
+                </p>
+
+                <form onSubmit={handleExternalSubmit} className="space-y-6">
+                  {/* ... (Input de Email Visitante) ... */}
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder="E-mail"
+                      value={externalEmail}
+                      onChange={(e) => setExternalEmail(e.target.value)}
+                      required
+                      disabled={externalLoading}
+                      className={`w-full pl-12 pr-4 py-4 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${externalError
+                        ? 'border-red-500 ring-red-500'
+                        : 'border-gray-200 focus:ring-green-500'
+                        }`}
+                    />
+                  </div>
+
+                  {/* ... (Input de Token Visitante) ... */}
+                  <div className="relative">
+                    <Key className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type={showToken ? 'text' : 'password'}
+                      placeholder="Token de Acesso"
+                      value={externalToken}
+                      onChange={(e) => setExternalToken(e.target.value)}
+                      required
+                      disabled={externalLoading}
+                      className={`w-full pl-12 pr-12 py-4 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${externalError
+                        ? 'border-red-500 ring-red-500'
+                        : 'border-gray-200 focus:ring-green-500'
+                        }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleTokenVisibility}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showToken ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {externalError && (
+                    <div className="flex items-center gap-2 text-sm text-red-600">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>{externalError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={externalLoading}
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-200 text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center disabled:opacity-70"
+                  >
+                    {externalLoading && <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
+                    {externalLoading ? "Acessando..." : "Acessar"}
+                  </button>
+
+                  <div className="text-center">
+                    <Link to="/register-visitante" className="text-green-600 hover:text-green-800 text-sm font-medium">
+                      Solicitar Acesso / Registrar com Convite
+                    </Link>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* BLOCO <style jsx> COMPLETAMENTE REMOVIDO */}
     </div>
   );
 }

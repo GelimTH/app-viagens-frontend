@@ -2,11 +2,24 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Funções que conversam com o nosso backend
 export const api = {
@@ -19,6 +32,28 @@ export const api = {
   getCurrentUser: async () => {
     const response = await apiClient.get('/auth/me');
     return response.data;
+  },
+
+  register: async (userData) => {
+    // userData deve ser { email, password, fullName }
+    const response = await apiClient.post('/auth/register', userData);
+    return response.data;
+  },
+
+  registerVisitante: async (visitorData) => {
+    const response = await apiClient.post('/auth/visitante/register', visitorData); // <-- Correto
+    return response.data;
+  },
+
+  getMinhaViagem: async () => {
+    const response = await apiClient.get('/visitante/minha-viagem');
+    return response.data; // Retorna { viagem, perfil, gestor }
+  },
+
+  logout: () => {
+    localStorage.removeItem('authToken');
+    console.log("Usuário deslogado.");
+    return Promise.resolve();
   },
 
   // --- Viagens (CRUD) ---
@@ -53,7 +88,7 @@ export const api = {
     const response = await apiClient.post('/chatbot/ask', dados);
     return response.data; // Esperamos uma resposta como: { resposta: "..." }
   },
-  
+
   getDespesas: async (viagemId) => {
     const response = await apiClient.get('/despesas', {
       params: { viagemId } // Envia o viagemId como um query param
@@ -66,8 +101,51 @@ export const api = {
     return response.data;
   },
 
-  updateDespesa: async ({ id, status }) => {
+  updateDespesaStatus: async ({ id, status }) => {
     const response = await apiClient.patch(`/despesas/${id}`, { status });
     return response.data;
+  },
+
+  deleteViagem: async (id) => {
+    await apiClient.delete(`/viagens/${id}`);
+    // A rota DELETE não retorna conteúdo, então não precisamos retornar nada
+  },
+
+  convidarVisitante: async ({ viagemId, email, cpf }) => {
+    // Chama o novo endpoint que criamos no backend
+    const response = await apiClient.post(`/viagens/${viagemId}/convidar`, { email, cpf });
+    return response.data; // Retorna o convite criado (com o token)
+  },
+
+  getConvites: async (viagemId) => {
+    const response = await apiClient.get(`/viagens/${viagemId}/convites`);
+    return response.data; // Retorna a lista de convites
+  },
+
+  // ADICIONE ESTA NOVA FUNÇÃO DE UPLOAD
+  uploadFile: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file); // 'file' deve ser o mesmo nome usado no `upload.single('file')` do backend
+
+    const response = await apiClient.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data; // Espera um retorno como { fileUrl: '...' }
+  },
+
+  getDespesaById: async (id) => {
+    const response = await apiClient.get(`/despesas/${id}`);
+    return response.data;
+  },
+
+  updateDespesa: async ({ id, ...data }) => {
+    const response = await apiClient.patch(`/despesas/${id}`, data);
+    return response.data;
+  },
+
+  deleteDespesa: async (id) => {
+    await apiClient.delete(`/despesas/${id}`);
   },
 };

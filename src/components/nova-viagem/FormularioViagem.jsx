@@ -1,20 +1,28 @@
+// src/components/nova-viagem/FormularioViagem.jsx
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Calendar, FileText, ArrowRight, User } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MapPin, Calendar, FileText, ArrowRight, Save } from "lucide-react";
 
-export default function FormularioViagem({ onSubmit, carregando, perfilColaborador }) {
-  const [dados, setDados] = useState({
-    origem: "",
-    destino: "",
-    data_ida: "",
-    data_volta: "",
-    motivo: ""
-  });
+export default function FormularioViagem({
+  onSubmit,
+  carregando,
+  dadosIniciais = null,
+  isEditMode = false
+}) {
+
+  const [dados, setDados] = useState(
+    dadosIniciais || {
+      origem: "",
+      destino: "",
+      data_ida: "",
+      data_volta: "",
+      motivo: ""
+    }
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,103 +34,37 @@ export default function FormularioViagem({ onSubmit, carregando, perfilColaborad
       <Card className="border-0 shadow-xl bg-white">
         <CardHeader className="border-b border-slate-100 pb-4">
           <CardTitle className="text-xl font-bold text-slate-900">
-            Dados Básicos da Viagem
+            {isEditMode ? 'Editando Dados da Viagem' : 'Dados Básicos da Viagem'}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          {/* Perfil Info */}
-          {perfilColaborador && (
-            <Alert className="bg-blue-50 border-blue-200">
-              <User className="w-4 h-4 text-blue-600" />
-              <AlertDescription className="text-sm text-slate-700">
-                <strong>Perfil detectado:</strong> {perfilColaborador.cargo} - {perfilColaborador.departamento}
-                <br />
-                <strong>Centro de custo padrão:</strong> {perfilColaborador.centro_custo_padrao}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Origem/Destino */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="origem" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-blue-600" />
-                Cidade de Origem
-              </Label>
-              <Input
-                id="origem"
-                required
-                value={dados.origem}
-                onChange={(e) => setDados({ ...dados, origem: e.target.value })}
-                placeholder="Ex: São Paulo"
-                className="border-slate-200 focus:border-blue-500"
-              />
+              <Label htmlFor="origem" className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-600" /> Cidade de Origem</Label>
+              <Input id="origem" required value={dados.origem} onChange={(e) => setDados({ ...dados, origem: e.target.value })} placeholder="Ex: São Paulo" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="destino" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-blue-600" />
-                Cidade de Destino
-              </Label>
-              <Input
-                id="destino"
-                required
-                value={dados.destino}
-                onChange={(e) => setDados({ ...dados, destino: e.target.value })}
-                placeholder="Ex: Rio de Janeiro"
-                className="border-slate-200 focus:border-blue-500"
-              />
+              <Label htmlFor="destino" className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-600" /> Cidade de Destino</Label>
+              <Input id="destino" required value={dados.destino} onChange={(e) => setDados({ ...dados, destino: e.target.value })} placeholder="Ex: Rio de Janeiro" />
             </div>
           </div>
 
-          {/* Datas */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="data_ida" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                Data de Ida
-              </Label>
-              <Input
-                id="data_ida"
-                type="date"
-                required
-                value={dados.data_ida}
-                onChange={(e) => setDados({ ...dados, data_ida: e.target.value })}
-                className="border-slate-200 focus:border-blue-500"
-              />
+              <Label htmlFor="data_ida" className="flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-600" /> Data de Ida</Label>
+              <Input id="data_ida" type="date" required value={dados.data_ida} onChange={(e) => setDados({ ...dados, data_ida: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="data_volta" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                Data de Volta
-              </Label>
-              <Input
-                id="data_volta"
-                type="date"
-                required
-                value={dados.data_volta}
-                onChange={(e) => setDados({ ...dados, data_volta: e.target.value })}
-                className="border-slate-200 focus:border-blue-500"
-              />
+              <Label htmlFor="data_volta" className="flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-600" /> Data de Volta</Label>
+              <Input id="data_volta" type="date" required value={dados.data_volta} onChange={(e) => setDados({ ...dados, data_volta: e.target.value })} />
             </div>
           </div>
 
-          {/* Motivo */}
           <div className="space-y-2">
-            <Label htmlFor="motivo" className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-600" />
-              Motivo da Viagem
-            </Label>
-            <Textarea
-              id="motivo"
-              required
-              value={dados.motivo}
-              onChange={(e) => setDados({ ...dados, motivo: e.target.value })}
-              placeholder="Descreva o motivo da viagem..."
-              className="border-slate-200 focus:border-blue-500 min-h-[100px]"
-            />
+            <Label htmlFor="motivo" className="flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600" /> Motivo da Viagem</Label>
+            <Textarea id="motivo" required value={dados.motivo} onChange={(e) => setDados({ ...dados, motivo: e.target.value })} placeholder="Descreva o motivo da viagem..." className="min-h-[100px]" />
           </div>
 
-          {/* Submit Button */}
           <Button
             type="submit"
             disabled={carregando}
