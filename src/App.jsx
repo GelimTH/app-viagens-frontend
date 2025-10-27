@@ -1,7 +1,7 @@
 // src/App.jsx
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Layout from './components/shared/Layout.jsx';
+import Layout from './components/shared/layout.jsx';
 import ChatbotWidget from './components/shared/ChatbotWidget.jsx';
 
 function App() {
