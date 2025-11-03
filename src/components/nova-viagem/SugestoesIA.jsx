@@ -15,10 +15,12 @@ import {
   Star,
   Clock,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Download
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatarMoeda } from "@/lib/utils";
+import { gerarPDFExecutivo } from '@/lib/pdfGenerator';
 
 // O componente para as "cartas" individuais continua o mesmo, ele já está ótimo.
 function OpcaoCard({ icone: Icone, corIcone, titulo, subtitulo, valor, maisBarato, faixaPreco }) {
@@ -75,10 +77,14 @@ function OpcaoCard({ icone: Icone, corIcone, titulo, subtitulo, valor, maisBarat
   );
 }
 
-export default function SugestoesIA({ sugestoes, onConfirmar, onVoltar, carregando }) {
+export default function SugestoesIA({ sugestoes, onConfirmar, onVoltar, carregando, dadosViagem, }) {
 
   const faixaPrecoVoos = null; // Ainda não temos faixa para voos
   const faixaPrecoHoteis = sugestoes.faixaPreco; // <-- Pega a faixa de preço
+
+  const handleExportPDF = () => {
+    gerarPDFExecutivo(dadosViagem, sugestoes);
+  };
 
   return (
     <div className="space-y-6">
@@ -172,6 +178,10 @@ export default function SugestoesIA({ sugestoes, onConfirmar, onVoltar, carregan
           Voltar
         </Button>
         <div className="flex-grow"></div>
+        <Button variant="outline" onClick={handleExportPDF} className="w-full sm:w-auto">
+          <Download className="w-4 h-4 mr-2" />
+          Exportar PDF
+        </Button>
         <Button variant="outline" onClick={onVoltar} className="w-full sm:w-auto">
           <Edit className="w-4 h-4 mr-2" />
           Editar

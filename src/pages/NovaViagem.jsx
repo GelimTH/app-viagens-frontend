@@ -160,6 +160,7 @@ export default function NovaViagem() {
         }
         return (
           <SugestoesIA
+            dadosViagem={dadosViagem}
             sugestoes={sugestoesIA}
             onConfirmar={handleConfirmarViagem}
             onVoltar={() => irParaEtapa(2)}
