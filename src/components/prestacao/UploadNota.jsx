@@ -1,6 +1,3 @@
-// [adv-front.md] meu-app-de-viagens\src\components\prestacao\UploadNota.jsx
-// VERSÃO ATUALIZADA (para dois arquivos)
-
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "@/api/apiClient";
 import { NumericFormat } from 'react-number-format';
@@ -57,7 +54,8 @@ const FilePreview = ({ label, fileUrl, file, onRemove, onHoverEnter, onHoverLeav
 
 
 export default function UploadNota({ 
-  viagemId, 
+  viagemId,
+  eventoTimelineId = null,
   onCancelar, 
   onSucesso, 
   onSalvar,
@@ -172,7 +170,8 @@ export default function UploadNota({
       // 3. Prepara os dados finais
       const dadosFinais = {
         ...dadosDespesa,
-        viagem_id: viagemId, 
+        viagem_id: viagemId,
+        eventoTimelineId: eventoTimelineId,
         valor: parseFloat(dadosDespesa.valor) || 0, // Garante que seja um número
         status: "pendente",
         notaFiscalUrl: finalNotaFiscalUrl,

@@ -148,4 +148,22 @@ export const api = {
   deleteDespesa: async (id) => {
     await apiClient.delete(`/despesas/${id}`);
   },
+
+  getTimelineDaViagem: async (viagemId) => {
+    const response = await apiClient.get(`/viagens/${viagemId}/timeline`);
+    return response.data; // Retorna a lista de eventos
+  },
+
+  createViagem: async (viagemData) => {
+    // "viagemData" agora contém { origem, destino, ..., eventos: [] }
+    const response = await apiClient.post('/viagens', viagemData);
+    return response.data;
+  },
+
+  getFaixaPreco: async (destino) => {
+    const response = await apiClient.get('/viagens/faixa-preco', {
+      params: { destino } // Envia o destino como query param
+    });
+    return response.data; // Retorna { avg, min, max, count }
+  },
 };

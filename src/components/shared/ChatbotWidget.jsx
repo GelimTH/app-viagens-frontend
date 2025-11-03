@@ -1,5 +1,5 @@
-// src/components/shared/ChatbotWidget.jsx
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom'; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ export default function ChatbotWidget() {
   const [inputMensagem, setInputMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
   const mensagensEndRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen) {
@@ -38,13 +39,43 @@ const handleEnviar = async () => {
     setCarregando(true);
 
     try {
-      // Simula um tempo mínimo de "pensamento" para a IA
       const [respostaDoBot] = await Promise.all([
         api.askChatbot({ pergunta }),
-        new Promise(resolve => setTimeout(resolve, 750)) // Atraso de 750ms
+        new Promise(resolve => setTimeout(resolve, 750))
       ]);
 
-      setMensagens(prev => [...prev, { tipo: "bot", texto: respostaDoBot.resposta }]);
+      // --- NOVA LÓGICA DE AÇÃO ---
+      switch (respostaDoBot.action) {
+        case 'show_text':
+          // Ação Padrão: Apenas mostra a mensagem
+          setMensagens(prev => [...prev, { tipo: "bot", texto: respostaDoBot.payload.message }]);
+          break;
+
+        case 'navigate':
+          // Ação Executável: Navega para uma página
+          setMensagens(prev => [...prev, { 
+            tipo: "bot", 
+            texto: `Claro! Estou te levando para a página '${respostaDoBot.payload.to.replace('/app/','')}'...` 
+          }]);
+
+          // Navega após um pequeno atraso para o usuário ler
+          setTimeout(() => {
+            navigate(respostaDoBot.payload.to);
+            setIsOpen(false); // Fecha o chat
+          }, 1200);
+          break;
+
+        // (Futuro) case 'cotar_voo':
+        //   setMensagens(prev => [...prev, { tipo: "bot", texto: "Entendido. Buscando cotações..." }]);
+        //   // Chamar uma função para abrir o modal de cotação
+        //   break;
+
+        default:
+          // Fallback se a API retornar algo inesperado
+          setMensagens(prev => [...prev, { tipo: "bot", texto: "Não entendi o comando da IA." }]);
+      }
+      // --- FIM DA NOVA LÓGICA ---
+
     } catch (error) {
       console.error("Erro ao falar com o chatbot:", error);
       setMensagens(prev => [...prev, { tipo: "bot", texto: "Desculpe, não consegui me conectar. Tente novamente." }]);

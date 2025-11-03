@@ -13,38 +13,73 @@ import {
   ArrowLeft,
   Briefcase,
   Star,
-  Clock
+  Clock,
+  AlertTriangle,
+  TrendingUp
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatarMoeda } from "@/lib/utils";
 
 // O componente para as "cartas" individuais continua o mesmo, ele já está ótimo.
-function OpcaoCard({ icone: Icone, corIcone, titulo, subtitulo, valor, maisBarato }) {
+function OpcaoCard({ icone: Icone, corIcone, titulo, subtitulo, valor, maisBarato, faixaPreco }) {
+
+  let outlier = null;
+  if (faixaPreco && faixaPreco.count > 0) { // Só exibe se tivermos dados históricos
+    if (valor > faixaPreco.max) outlier = 'caro';
+    if (valor < faixaPreco.min) outlier = 'barato';
+  }
+
+  const badgeMaisBarato = maisBarato && !outlier;
+  const badgeOutlierCaro = outlier === 'caro';
+  const badgeOutlierBarato = outlier === 'barato' && !maisBarato;
+
   return (
     <div className={`
       relative bg-white rounded-xl p-4 flex flex-col transition-all duration-300
-      hover:shadow-lg hover:-translate-y-1
-      ${maisBarato ? 'border-2 border-green-500 pt-8' : 'border border-slate-200'}
+      hover:shadow-lg hover:-translate-y-1 border
+      ${badgeMaisBarato ? 'border-2 border-green-500 pt-8' : 'border-slate-200'}
+      ${badgeOutlierCaro ? 'border-2 border-red-500 pt-8' : ''}
+      ${badgeOutlierBarato ? 'border-2 border-blue-500 pt-8' : ''}
     `}>
-      {maisBarato && (
-        // ===== MUDANÇA AQUI: Adicionamos `whitespace-nowrap` =====
+      {badgeMaisBarato && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 bg-green-500 text-white text-xs font-bold uppercase rounded-full shadow-md whitespace-nowrap">
           Mais Barato
         </div>
       )}
+      {badgeOutlierCaro && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase rounded-full shadow-md whitespace-nowrap flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" /> Acima da Faixa
+        </div>
+      )}
+      {badgeOutlierBarato && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-bold uppercase rounded-full shadow-md whitespace-nowrap flex items-center gap-1">
+          <TrendingUp className="w-3 h-3" /> Abaixo da Faixa
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-2">
         {Icone && <Icone className={`w-4 h-4 flex-shrink-0 ${corIcone || 'text-slate-500'}`} />}
         <p className="font-bold text-sm text-slate-900 truncate">{titulo}</p>
       </div>
-      <div className="text-sm text-slate-600 mb-4">{subtitulo}</div>
-      <div className="mt-auto text-center">
+      <div className="text-sm text-slate-600 mb-2">{subtitulo}</div>
+
+      <div className="mt-auto text-center space-y-1 pt-2">
         <p className="font-bold text-lg text-slate-800">{formatarMoeda(valor)}</p>
+        {faixaPreco && faixaPreco.count > 0 && (
+          <p className="text-xs text-slate-500" title={`Baseado em ${faixaPreco.count} viagens`}>
+            Faixa: {formatarMoeda(faixaPreco.min)} - {formatarMoeda(faixaPreco.max)}
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
 export default function SugestoesIA({ sugestoes, onConfirmar, onVoltar, carregando }) {
+
+  const faixaPrecoVoos = null; // Ainda não temos faixa para voos
+  const faixaPrecoHoteis = sugestoes.faixaPreco; // <-- Pega a faixa de preço
+
   return (
     <div className="space-y-6">
       {/* 1. MUDANÇA: O Card principal agora engloba TUDO para criar o "quadro" */}
@@ -79,6 +114,7 @@ export default function SugestoesIA({ sugestoes, onConfirmar, onVoltar, carregan
                     key={voo.id} icone={Briefcase} titulo={voo.compania}
                     subtitulo={<span className="flex items-center gap-1.5 text-xs"><Clock className="w-3 h-3" /> {voo.horario}</span>}
                     valor={voo.valor} maisBarato={voo.maisBarato}
+                    faixaPreco={faixaPrecoVoos}
                   />
                 ))}
               </div>
@@ -101,6 +137,7 @@ export default function SugestoesIA({ sugestoes, onConfirmar, onVoltar, carregan
                         </div>
                       }
                       valor={hotel.valor} maisBarato={hotel.maisBarato}
+                      faixaPreco={faixaPrecoHoteis}
                     />
                   ))}
                 </div>
