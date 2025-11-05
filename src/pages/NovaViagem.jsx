@@ -1,20 +1,15 @@
-// src/pages/NovaViagem.jsx
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Plane, Loader2 } from "lucide-react"; // Importe o Loader2
+import { Sparkles, Plane, Loader2 } from "lucide-react"; 
 import { api } from "@/api/apiClient";
-
-// Nossas Etapas
 import FormularioViagem from "../components/nova-viagem/FormularioViagem";
 import EtapaAgenda from "../components/nova-viagem/EtapaAgenda";
 import SugestoesIA from "../components/nova-viagem/SugestoesIA";
 
-// A IA simulada (do seu arquivo original)
 function gerarSugestoes(dados) {
-  // Verifique se 'dados' não é nulo
   const destino = dados?.destino || 'Destino Padrão';
-  const valorEstimado = Math.random() * 2000 + 500; // Valor aleatório
+  const valorEstimado = Math.random() * 2000 + 500;
   return {
     justificativa: `Baseado no destino ${destino}, recomendamos foco em transporte eficiente.`,
     tipo_transporte: "Aéreo",
@@ -34,7 +29,6 @@ export default function NovaViagem() {
   const [dadosViagem, setDadosViagem] = useState(null); // <-- O state correto
   const [eventos, setEventos] = useState([]);
   const [sugestoesIA, setSugestoesIA] = useState(null);
-  
   const [carregandoIA, setCarregandoIA] = useState(false);
 
   const criarViagemMutation = useMutation({
@@ -49,41 +43,33 @@ export default function NovaViagem() {
     }
   });
 
-  // Etapa 1 -> 2: Salva dados básicos e avança para Agenda
   const handleAvancarParaAgenda = (dadosDoFormulario) => {
-    setDadosViagem(dadosDoFormulario); // <-- CORREÇÃO #1 (era setDadosIniciais)
+    setDadosViagem(dadosDoFormulario); // <-- CORRIGIDO #1
     setStep(2);
   };
 
-  // Etapa 2 -> 3: Gera sugestões da IA e avança para Custos
   const handleAvancarParaIA = async () => {
     setCarregandoIA(true);
 
     const sugestoesPromise = new Promise((resolve) => {
       setTimeout(() => {
-        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORREÇÃO #2 (era dadosIniciais)
+        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO #2
         resolve(sugestoes);
       }, 1000);
     });
 
-    const faixaPrecoPromise = api.getFaixaPreco(dadosViagem.destino); // <-- CORREÇÃO #3 (era dadosIniciais)
+    const faixaPrecoPromise = api.getFaixaPreco(dadosViagem.destino); // <-- CORRIGIDO #3
 
     try {
       const [sugestoes, faixaPreco] = await Promise.all([
         sugestoesPromise,
         faixaPrecoPromise
       ]);
-
-      setSugestoesIA({
-        ...sugestoes,
-        faixaPreco: faixaPreco,
-      });
-      
+      setSugestoesIA({ ...sugestoes, faixaPreco: faixaPreco });
       setStep(3);
-
     } catch (error) {
       console.error("Erro ao buscar sugestões ou faixa de preço:", error);
-      const sugestoes = gerarSugestoes(dadosViagem); // <-- CORREÇÃO #4 (era dadosIniciais)
+      const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO #4
       setSugestoesIA({ ...sugestoes, faixaPreco: null });
       setStep(3);
     } finally {
@@ -91,14 +77,12 @@ export default function NovaViagem() {
     }
   };
 
-  // Etapa 3 -> Final: Junta tudo e envia para a API
   const handleConfirmarViagem = (sugestoesFinais) => {
     const dadosCompletosParaSalvar = {
       ...dadosViagem,
       valorEstimado: sugestoesFinais.valor_estimado,
       eventos: eventos, 
     };
-    
     criarViagemMutation.mutate(dadosCompletosParaSalvar);
   };
 
@@ -148,7 +132,7 @@ export default function NovaViagem() {
         }
         return (
           <SugestoesIA 
-            dadosViagem={dadosViagem} // <-- Prop que faltava
+            dadosViagem={dadosViagem} 
             sugestoes={sugestoesIA}
             onConfirmar={handleConfirmarViagem}
             onVoltar={() => irParaEtapa(2)}

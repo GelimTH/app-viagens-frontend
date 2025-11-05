@@ -8,15 +8,16 @@ export default defineConfig({
   plugins: [react()],
   resolve: { 
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      // CORREÇÃO: Removido `__dirname` e usando o `import.meta.url` do ES Modules
+      "@": path.resolve(new URL('.', import.meta.url).pathname, "./src"),
     },
   },
   server: {
     host: true, 
     allowedHosts: ['.ngrok-free.app'],
-    // ADICIONE ESTA SEÇÃO `proxy`
     proxy: {
       '/api': {
+        // Seu proxy (sem mudanças)
         target: 'http://localhost:3001',
         changeOrigin: true,
       }
