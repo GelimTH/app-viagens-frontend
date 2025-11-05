@@ -15,7 +15,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: { 
     alias: {
-      "@": path.resolve(__dirname, "./src"), // <-- 3. Agora __dirname está definido
+      "@": path.resolve(__dirname, "./src"), // <-- 3. Agora __dirname está definido e o alias está correto
     },
   },
   server: {
@@ -23,7 +23,7 @@ export default defineConfig({
     allowedHosts: ['.ngrok-free.app'],
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3001', // Seu proxy (sem mudanças)
         changeOrigin: true,
       }
     }

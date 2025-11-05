@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -53,12 +54,22 @@ export default function NovaViagem() {
 
     const sugestoesPromise = new Promise((resolve) => {
       setTimeout(() => {
-        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO #2
+        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO (era dadosIniciais)
         resolve(sugestoes);
       }, 1000);
     });
 
-    const faixaPrecoPromise = api.getFaixaPreco(dadosViagem.destino); // <-- CORRIGIDO #3
+    const destino = dadosViagem?.destino; // <-- CORRIGIDO (adicionada verificação)
+    if (!destino) {
+        console.error("Destino não definido para buscar faixa de preço.");
+        setCarregandoIA(false);
+        const sugestoes = gerarSugestoes(dadosViagem);
+        setSugestoesIA({ ...sugestoes, faixaPreco: null });
+        setStep(3);
+        return;
+    }
+
+    const faixaPrecoPromise = api.getFaixaPreco(destino); // <-- CORRIGIDO (era dadosIniciais.destino)
 
     try {
       const [sugestoes, faixaPreco] = await Promise.all([
@@ -69,7 +80,7 @@ export default function NovaViagem() {
       setStep(3);
     } catch (error) {
       console.error("Erro ao buscar sugestões ou faixa de preço:", error);
-      const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO #4
+      const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO (era dadosIniciais)
       setSugestoesIA({ ...sugestoes, faixaPreco: null });
       setStep(3);
     } finally {

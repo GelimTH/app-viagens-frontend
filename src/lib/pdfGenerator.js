@@ -1,3 +1,4 @@
+// src/lib/pdfGenerator.js
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable'; // <-- CORREÇÃO #1 (import nomeado)
 import { format } from 'date-fns';
@@ -34,6 +35,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
   doc.text(`Motivo: ${dadosViagem.motivo}`, 14, cursorY);
   cursorY += 10;
 
+  // ... (o resto do código é o mesmo) ...
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text('Custo Total Estimado (Opções Recomendadas):', 14, cursorY);
