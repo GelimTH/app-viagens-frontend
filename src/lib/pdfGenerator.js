@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -62,7 +62,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     doc.text('Opções de Transporte (Voo)', 14, cursorY);
     cursorY += 7;
 
-    doc.autoTable({
+    autoTable({
       startY: cursorY,
       head: [['Companhia', 'Horário', 'Status', 'Valor']],
       body: sugestoes.voosSugeridos.map(voo => [
@@ -83,7 +83,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     doc.text('Opções de Hospedagem', 14, cursorY);
     cursorY += 7;
 
-    doc.autoTable({
+    autoTable({
       startY: cursorY,
       head: [['Hotel', 'Estrelas', 'Status', 'Valor']],
       body: sugestoes.hoteisSugeridos.map(hotel => [
