@@ -1,7 +1,8 @@
+// src/pages/NovaViagem.jsx
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Plane } from "lucide-react";
+import { Sparkles, Plane, Loader2 } from "lucide-react"; // Importe o Loader2
 import { api } from "@/api/apiClient";
 
 // Nossas Etapas
@@ -11,13 +12,15 @@ import SugestoesIA from "../components/nova-viagem/SugestoesIA";
 
 // A IA simulada (do seu arquivo original)
 function gerarSugestoes(dados) {
+  // Verifique se 'dados' não é nulo
+  const destino = dados?.destino || 'Destino Padrão';
   const valorEstimado = Math.random() * 2000 + 500; // Valor aleatório
   return {
-    justificativa: `Baseado no destino ${dados.destino}, recomendamos foco em transporte eficiente.`,
+    justificativa: `Baseado no destino ${destino}, recomendamos foco em transporte eficiente.`,
     tipo_transporte: "Aéreo",
     necessita_hospedagem: true,
     voosSugeridos: [{ id: 1, compania: "Azul", horario: "08:00 - 10:30", valor: valorEstimado * 0.6, maisBarato: true }, { id: 2, compania: "Gol", horario: "09:30 - 12:00", valor: valorEstimado * 0.7 }],
-    hoteisSugeridos: [{ id: 1, nome: `Hotel Plaza ${dados.destino}`, estrelas: 4, valor: valorEstimado * 0.4, maisBarato: true }],
+    hoteisSugeridos: [{ id: 1, nome: `Hotel Plaza ${destino}`, estrelas: 4, valor: valorEstimado * 0.4, maisBarato: true }],
     valor_estimado: valorEstimado,
     centro_custo: "Viagens Corporativas",
   };
@@ -27,17 +30,15 @@ export default function NovaViagem() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // --- NOVOS ESTADOS PARA O WIZARD ---
-  const [step, setStep] = useState(1); // 1: Dados, 2: Agenda, 3: IA/Custos
-  const [dadosViagem, setDadosViagem] = useState(null);
+  const [step, setStep] = useState(1);
+  const [dadosViagem, setDadosViagem] = useState(null); // <-- O state correto
   const [eventos, setEventos] = useState([]);
   const [sugestoesIA, setSugestoesIA] = useState(null);
-
+  
   const [carregandoIA, setCarregandoIA] = useState(false);
 
-  // Mutação para CRIAR a viagem (agora no final)
   const criarViagemMutation = useMutation({
-    mutationFn: api.createViagem, // apiClient será atualizado na Etapa 4
+    mutationFn: api.createViagem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['viagens'] });
       navigate('/app/dashboard');
@@ -50,7 +51,7 @@ export default function NovaViagem() {
 
   // Etapa 1 -> 2: Salva dados básicos e avança para Agenda
   const handleAvancarParaAgenda = (dadosDoFormulario) => {
-    setDadosViagem(dadosDoFormulario);
+    setDadosViagem(dadosDoFormulario); // <-- CORREÇÃO #1 (era setDadosIniciais)
     setStep(2);
   };
 
@@ -58,36 +59,31 @@ export default function NovaViagem() {
   const handleAvancarParaIA = async () => {
     setCarregandoIA(true);
 
-    // Dispara as duas "IAs" em paralelo
     const sugestoesPromise = new Promise((resolve) => {
       setTimeout(() => {
-        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO
+        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORREÇÃO #2 (era dadosIniciais)
         resolve(sugestoes);
-      }, 1000); // 1s de atraso
+      }, 1000);
     });
 
-    // Busca a faixa de preço real
-    const faixaPrecoPromise = api.getFaixaPreco(dadosViagem.destino);
+    const faixaPrecoPromise = api.getFaixaPreco(dadosViagem.destino); // <-- CORREÇÃO #3 (era dadosIniciais)
 
     try {
-      // Espera as duas terminarem
       const [sugestoes, faixaPreco] = await Promise.all([
         sugestoesPromise,
         faixaPrecoPromise
       ]);
 
-      // Junta os resultados
       setSugestoesIA({
         ...sugestoes,
-        faixaPreco: faixaPreco, // <-- Anexa a faixa de preço
+        faixaPreco: faixaPreco,
       });
-
+      
       setStep(3);
 
     } catch (error) {
       console.error("Erro ao buscar sugestões ou faixa de preço:", error);
-      // Se falhar, continua mesmo assim, mas sem a faixa de preço
-      const sugestoes = gerarSugestoes(dadosViagem); // Gera sugestões (fallback)
+      const sugestoes = gerarSugestoes(dadosViagem); // <-- CORREÇÃO #4 (era dadosIniciais)
       setSugestoesIA({ ...sugestoes, faixaPreco: null });
       setStep(3);
     } finally {
@@ -95,29 +91,22 @@ export default function NovaViagem() {
     }
   };
 
+  // Etapa 3 -> Final: Junta tudo e envia para a API
   const handleConfirmarViagem = (sugestoesFinais) => {
-    // Junta os dados do formulário original com as sugestões da IA
     const dadosCompletosParaSalvar = {
-      // Dados do primeiro formulário (origem, destino, datas, etc.)
-      ...dadosIniciais,
-
-      // Dados gerados pela IA que também queremos salvar
+      ...dadosViagem,
       valorEstimado: sugestoesFinais.valor_estimado,
-      tipoTransporte: sugestoesFinais.tipo_transporte,
-      necessitaHospedagem: sugestoesFinais.necessita_hospedagem,
+      eventos: eventos, 
     };
-
-    // Chama a API para criar a viagem
+    
     criarViagemMutation.mutate(dadosCompletosParaSalvar);
   };
-  // --- Funções de Navegação do Wizard ---
+
   const irParaEtapa = (etapa) => {
-    // Zera sugestões se voltar
     if (etapa < 3) setSugestoesIA(null);
     setStep(etapa);
   };
 
-  // Header (sem mudança)
   const renderHeader = () => (
     <div className="flex items-center gap-4">
       <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -134,14 +123,13 @@ export default function NovaViagem() {
     </div>
   );
 
-  // Renderização condicional da etapa
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
-          <FormularioViagem
+          <FormularioViagem 
             onSubmit={handleAvancarParaAgenda}
-            carregando={false} // Não há IA nesta etapa ainda
+            carregando={false}
             dadosIniciais={dadosViagem}
           />
         );
@@ -159,8 +147,8 @@ export default function NovaViagem() {
           return <div className="text-center p-12"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
         }
         return (
-          <SugestoesIA
-            dadosViagem={dadosViagem}
+          <SugestoesIA 
+            dadosViagem={dadosViagem} // <-- Prop que faltava
             sugestoes={sugestoesIA}
             onConfirmar={handleConfirmarViagem}
             onVoltar={() => irParaEtapa(2)}

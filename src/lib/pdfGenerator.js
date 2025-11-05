@@ -1,5 +1,6 @@
+// src/lib/pdfGenerator.js
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import autoTable from 'jspdf-autotable'; // <-- CORREÇÃO #1 (import nomeado)
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -17,6 +18,11 @@ const addWrappedText = (doc, text, x, y, maxWidth) => {
 
 // Função principal de geração
 export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
+  if (!dadosViagem || !sugestoes) {
+    console.error("Dados da viagem ou sugestões ausentes para o PDF.");
+    return; // Impede o erro
+  }
+  
   const doc = new jsPDF();
   let cursorY = 20; // Posição vertical inicial
 
@@ -62,7 +68,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     doc.text('Opções de Transporte (Voo)', 14, cursorY);
     cursorY += 7;
 
-    autoTable({
+    autoTable(doc, { // <-- CORREÇÃO #2 (chamada da função)
       startY: cursorY,
       head: [['Companhia', 'Horário', 'Status', 'Valor']],
       body: sugestoes.voosSugeridos.map(voo => [
@@ -76,14 +82,14 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     });
     cursorY = doc.previousAutoTable.finalY + 10; // Atualiza o cursor
   }
-
+  
   // --- 6. TABELA DE HOTÉIS (se houver) ---
   if (sugestoes.hoteisSugeridos && sugestoes.hoteisSugeridos.length > 0) {
     doc.setFontSize(12);
     doc.text('Opções de Hospedagem', 14, cursorY);
     cursorY += 7;
 
-    autoTable({
+    autoTable(doc, { // <-- CORREÇÃO #3 (chamada da função)
       startY: cursorY,
       head: [['Hotel', 'Estrelas', 'Status', 'Valor']],
       body: sugestoes.hoteisSugeridos.map(hotel => [
