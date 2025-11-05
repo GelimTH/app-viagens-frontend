@@ -9,10 +9,12 @@ import { api } from '@/api/apiClient';
 
 // --- VOZ ---
 // Checa se o navegador tem suporte à API de Fala
-const SpeechRecognition = typeof window !== 'undefined'
-  ? (window.SpeechRecognition || window.webkitSpeechRecognition)
-  : undefined;
-const micDisponivel = !!SpeechRecognition;
+let SpeechRecognition;
+let micDisponivel = false;
+if (typeof window !== 'undefined') {
+  SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  micDisponivel = !!SpeechRecognition;
+}
 // -----------
 
 export default function ChatbotWidget() {

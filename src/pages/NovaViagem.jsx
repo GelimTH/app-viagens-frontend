@@ -55,13 +55,13 @@ export default function NovaViagem() {
   };
 
   // Etapa 2 -> 3: Gera sugestões da IA e avança para Custos
-  const handleAvancarParaIA = async () => { // <-- Transforme em async
+  const handleAvancarParaIA = async () => {
     setCarregandoIA(true);
 
     // Dispara as duas "IAs" em paralelo
     const sugestoesPromise = new Promise((resolve) => {
       setTimeout(() => {
-        const sugestoes = gerarSugestoes(dadosViagem);
+        const sugestoes = gerarSugestoes(dadosViagem); // <-- CORRIGIDO
         resolve(sugestoes);
       }, 1000); // 1s de atraso
     });
