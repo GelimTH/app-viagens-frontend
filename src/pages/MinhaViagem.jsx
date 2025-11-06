@@ -1,23 +1,19 @@
 // src/pages/MinhaViagem.jsx
-import React, { useState, useEffect } from 'react'; // <-- Importe useState e useEffect
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // <-- Importe useMutation e useQueryClient
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Plane, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TimelineItem from '../components/minha-viagem/TimelineItem'; // Importa o novo componente
+import TimelineItem from '../components/minha-viagem/TimelineItem'; // (Este componente nós criamos no P1)
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-// --- IMPORTE OS COMPONENTES DO MODAL E O FORMULÁRIO ---
 import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
-import UploadNota from '../components/prestacao/UploadNota';
+import UploadNota from '../components/prestacao/UploadNota'; // (Este componente nós criamos no P3)
 
-// --- CACHE ---
-// Chaves para o localStorage
+// Chaves para o cache (P5.C)
 const CACHE_VIAGEM_KEY = 'minhaViagemCache';
-const CACHE_TIMELINE_KEY = 'minhaTimelineCache';
 
-// Componente para o Card de Resumo (sem mudanças)
+// Componente para o Card de Resumo
 function ResumoViagem({ viagem, gestor }) {
   return (
     <Card className="border-0 shadow-xl bg-white">
@@ -47,70 +43,48 @@ function ResumoViagem({ viagem, gestor }) {
 
 // Página Principal
 export default function MinhaViagem() {
-  // --- CACHE ---
-  // Estados locais para guardar os dados (sejam eles do cache ou da API)
   const [dadosViagem, setDadosViagem] = useState(null);
-  const [timeline, setTimeline] = useState(null);
-  // -----------
-
   const queryClient = useQueryClient();
   const [modalDespesaAberto, setModalDespesaAberto] = useState(false);
   const [eventoSelecionadoId, setEventoSelecionadoId] = useState(null);
 
-  // --- CACHE (ETAPA 1): Ler dados do cache ao carregar a página ---
+  // --- CORREÇÃO DO BUG ---
+  // 1. Tenta ler do cache primeiro (P5.C)
   useEffect(() => {
     try {
       const viagemCache = localStorage.getItem(CACHE_VIAGEM_KEY);
-      const timelineCache = localStorage.getItem(CACHE_TIMELINE_KEY);
       if (viagemCache) {
         setDadosViagem(JSON.parse(viagemCache));
-      }
-      if (timelineCache) {
-        setTimeline(JSON.parse(timelineCache));
       }
     } catch (error) {
       console.warn("Falha ao ler cache:", error);
     }
-  }, []); // Executa apenas uma vez, quando o componente monta
+  }, []);
 
-  // --- CACHE (ETAPA 2): Busca dados da API (viagem) ---
+  // 2. Busca os dados da viagem (AGORA ESTÁ HABILITADO)
   const { isLoading: isLoadingViagem, error: errorViagem } = useQuery({
-    queryKey: ['minhaViagem'],
+    queryKey: ['minhaViagem'], // Não depende mais do user.id
     queryFn: api.getMinhaViagem,
+    enabled: true, // Garante que a query rode
     onSuccess: (data) => {
-      // API funcionou? Salva os dados no estado E no cache.
       setDadosViagem(data);
       localStorage.setItem(CACHE_VIAGEM_KEY, JSON.stringify(data));
     },
-    // Se falhar (offline), o `dadosViagem` do cache (lido no useEffect) será usado.
   });
-  
+  // --- FIM DA CORREÇÃO ---
+
   const viagemId = dadosViagem?.viagem?.id;
+  const timeline = dadosViagem?.viagem?.eventos || []; // Pega os eventos de dentro da viagem
 
-  // --- CACHE (ETAPA 3): Busca dados da API (timeline) ---
-  const { isLoading: isLoadingTimeline } = useQuery({
-    queryKey: ['timelineDaViagem', viagemId],
-    queryFn: () => api.getTimelineDaViagem(viagemId),
-    enabled: !!viagemId,
-    onSuccess: (data) => {
-      // API funcionou? Salva os dados no estado E no cache.
-      setTimeline(data);
-      localStorage.setItem(CACHE_TIMELINE_KEY, JSON.stringify(data));
-    },
-    // Se falhar (offline), o `timeline` do cache (lido no useEffect) será usado.
-  });
-
-  // Mutation para criar a despesa (copiada de PrestacaoContas.jsx)
   const createDespesaMutation = useMutation({
     mutationFn: api.createDespesa,
     onSuccess: () => {
-      // Invalida a query de despesas para atualizar a página de Prestação de Contas
-      queryClient.invalidateQueries({ queryKey: ['despesas', viagemId] });
-      handleFecharModalDespesa(); // Fecha o modal
+      queryClient.invalidateQueries({ queryKey: ['minhaViagem'] }); // Atualiza os dados
+      handleFecharModalDespesa();
     },
     onError: (err) => {
       console.error("Erro ao criar despesa:", err);
-      alert("Erro ao salvar despesa. Verifique os dados.");
+      alert("Erro ao salvar despesa.");
     }
   });
 
@@ -125,9 +99,7 @@ export default function MinhaViagem() {
   };
 
   // --- Tratamento de Loading e Erros ---
-  
-  // Mostra "Loading" SÓ SE não tiver NADA (nem cache)
-  if (isLoadingViagem && !dadosViagem) {
+  if (isLoadingViagem && !dadosViagem) { // Mostra loading se não tiver NADA (nem cache)
     return (
       <div className="p-8 flex items-center justify-center gap-2 text-slate-600">
         <Loader2 className="w-5 h-5 animate-spin" />
@@ -136,18 +108,16 @@ export default function MinhaViagem() {
     );
   }
 
-  // Mostra "Erro" SÓ SE não tiver NADA (nem cache)
-  if (errorViagem && !dadosViagem) {
+  if (errorViagem && !dadosViagem) { // Mostra erro se falhar E não tiver cache
     return (
       <div className="p-8 text-red-600 flex items-center justify-center gap-2">
         <AlertCircle className="w-5 h-5" />
-        {errorViagem.response?.data?.error || "Erro ao buscar sua viagem. Verifique sua conexão."}
+        {errorViagem.response?.data?.error || "Erro ao buscar sua viagem."}
       </div>
     );
   }
 
-  // Se não tem cache E não tem dados da API
-  if (!dadosViagem || !dadosViagem.viagem) {
+  if (!dadosViagem || !dadosViagem.viagem) { // Mostra se a API não retornar dados (ou o cache estiver vazio)
     return <div className="p-8 text-center text-slate-500">Nenhuma viagem encontrada para você.</div>;
   }
   
@@ -157,7 +127,6 @@ export default function MinhaViagem() {
     <div className="p-6 md:p-8">
       <div className="max-w-3xl mx-auto space-y-6">
         
-        {/* Header */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
             <Plane className="w-7 h-7 text-white" />
@@ -168,27 +137,18 @@ export default function MinhaViagem() {
           </div>
         </div>
 
-        {/* Card de Resumo */}
         <ResumoViagem viagem={viagem} gestor={gestor} />
 
-        {/* Card da Timeline */}
         <Card className="border-0 shadow-xl bg-white">
           <CardHeader>
             <CardTitle>Linha do Tempo</CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            {/* Mostra "Loading" SÓ SE não tiver cache da timeline */}
-            {isLoadingTimeline && !timeline ? (
-              <div className="flex items-center gap-2 text-slate-500">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Buscando eventos...
-              </div>
-            ) : !timeline || timeline.length === 0 ? (
+            {!timeline || timeline.length === 0 ? (
               <p className="text-slate-500 text-center py-4">
                 Nenhum evento de itinerário cadastrado para esta viagem.
               </p>
             ) : (
-              // Renderiza os dados (do cache ou da API)
               timeline.map((evento, index) => (
                 <TimelineItem
                   key={evento.id}
@@ -201,11 +161,8 @@ export default function MinhaViagem() {
             )}
           </CardContent>
         </Card> 
-        
-        {/* TODO: Adicionar Documentos Offline e Ações Rápidas (P5) */}
       </div>
 
-      {/* --- MODAL DE DESPESA (ADICIONAR NO FINAL) --- */}
       <Modal open={modalDespesaAberto} onClose={handleFecharModalDespesa} widthClass="max-w-2xl">
         <ModalHeader onClose={handleFecharModalDespesa}>
           Registrar Nova Despesa
@@ -213,16 +170,15 @@ export default function MinhaViagem() {
         <ModalBody>
           <UploadNota
             viagemId={viagemId}
-            eventoTimelineId={eventoSelecionadoId} // <-- PASSA O ID DO EVENTO
+            eventoTimelineId={eventoSelecionadoId}
             onSalvar={createDespesaMutation.mutateAsync}
             carregando={createDespesaMutation.isPending}
             onCancelar={handleFecharModalDespesa}
-            onSucesso={() => { /* A mutation já cuida de fechar */ }}
+            onSucesso={() => {}}
             isEditMode={false}
           />
         </ModalBody>
       </Modal>
-
     </div>
   );
 }
