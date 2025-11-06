@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable'; // <-- CORREÇÃO #1 (import nomeado)
+import autoTable from 'jspdf-autotable'; 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -56,7 +56,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     doc.setFontSize(12);
     doc.text('Opções de Transporte (Voo)', 14, cursorY);
     cursorY += 7;
-    autoTable(doc, { // <-- CORREÇÃO #2 (chamada da função)
+    autoTable(doc, { 
       startY: cursorY,
       head: [['Companhia', 'Horário', 'Status', 'Valor']],
       body: sugestoes.voosSugeridos.map(voo => [
@@ -68,14 +68,17 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
       theme: 'grid',
       headStyles: { fillColor: [22, 160, 133] }
     });
-    cursorY = doc.previousAutoTable.finalY + 10;
+    // ==================================================
+    // CORREÇÃO #1 AQUI
+    // ==================================================
+    cursorY = doc.lastAutoTable.finalY + 10;
   }
   
   if (sugestoes.hoteisSugeridos && sugestoes.hoteisSugeridos.length > 0) {
     doc.setFontSize(12);
     doc.text('Opções de Hospedagem', 14, cursorY);
     cursorY += 7;
-    autoTable(doc, { // <-- CORREÇÃO #3 (chamada da função)
+    autoTable(doc, { 
       startY: cursorY,
       head: [['Hotel', 'Estrelas', 'Status', 'Valor']],
       body: sugestoes.hoteisSugeridos.map(hotel => [
@@ -87,7 +90,10 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
       theme: 'grid',
       headStyles: { fillColor: [41, 128, 185] }
     });
-    cursorY = doc.previousAutoTable.finalY + 10;
+    // ==================================================
+    // CORREÇÃO #2 AQUI
+    // ==================================================
+    cursorY = doc.lastAutoTable.finalY + 10;
   }
 
   const pageCount = doc.internal.getNumberOfPages();
