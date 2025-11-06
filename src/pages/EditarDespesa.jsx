@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import UploadNota from '../components/prestacao/UploadNota'; // Vamos reutilizar este formulário
-import { Edit, Loader2 } from 'lucide-react';
+import { Edit, Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Função para formatar a data para o input type="date" (AAAA-MM-DD)
 const formatarDataParaInput = (data) => {
@@ -21,38 +22,35 @@ export default function EditarDespesa() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // 1. Busca os dados da despesa específica para preencher o formulário
   const { data: despesa, isLoading, error } = useQuery({
     queryKey: ['despesa', id],
     queryFn: () => api.getDespesaById(id),
   });
 
-  // 2. A mutação para ATUALIZAR a despesa
+  // 2. ATUALIZAR MUTAÇÃO (usar api.updateDespesa)
   const atualizarDespesaMutation = useMutation({
-    mutationFn: api.updateDespesa,
+    mutationFn: api.updateDespesa, // <--- Usamos a função de update normal
     onSuccess: () => {
-      // Invalida as queries para forçar a atualização dos dados em todo o app
       queryClient.invalidateQueries({ queryKey: ['despesas'] });
       queryClient.invalidateQueries({ queryKey: ['despesa', id] });
-      // Navega de volta para a prestação de contas
-      navigate(-1); // Volta para a página anterior (Prestação de Contas)
+      navigate(-1);
     },
     onError: (err) => {
-        console.error("Erro ao atualizar despesa:", err);
-        alert("Não foi possível atualizar a despesa.");
+      console.error("Erro ao atualizar despesa:", err);
+      alert("Não foi possível atualizar a despesa.");
     }
   });
 
-  // 3. Função chamada pelo formulário ao ser submetido
   const handleUpdateDespesa = (dadosDoFormulario) => {
     const dadosParaAtualizar = {
       id: Number(id),
       ...dadosDoFormulario,
       valor: parseFloat(dadosDoFormulario.valor)
+      // O status será resetado para 'pendente' pelo backend
     };
     atualizarDespesaMutation.mutate(dadosParaAtualizar);
   };
-  
+
   // 4. Prepara os dados iniciais do formulário (só quando a despesa for carregada)
   const [dadosIniciais, setDadosIniciais] = useState(null);
 
@@ -96,9 +94,17 @@ export default function EditarDespesa() {
           </div>
         </div>
 
-        {/* O formulário só é renderizado quando os dados iniciais estiverem prontos.
-          Isso garante que ele apareça já preenchido.
-        */}
+        {despesa?.status === 'reprovado' && despesa.justificativaReprovacao && (
+          <Alert variant="destructive" className="bg-red-50">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="font-medium text-red-800">
+              <span className="font-bold">Sua despesa foi reprovada.</span>
+              <p className="mt-1 font-normal whitespace-pre-wrap">Motivo: {despesa.justificativaReprovacao}</p>
+              <p className="mt-2 font-normal">Por favor, corrija os dados e salve novamente para resubmeter.</p>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {dadosIniciais && (
           <UploadNota
             onSalvar={handleUpdateDespesa}

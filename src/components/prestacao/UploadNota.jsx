@@ -246,6 +246,7 @@ export default function UploadNota({
                 <SelectItem value="transporte">Transporte</SelectItem>
                 <SelectItem value="hospedagem">Hospedagem</SelectItem>
                 <SelectItem value="alimentacao">Alimentação</SelectItem>
+                <SelectItem value="bilhete">Bilhete (Voo/Ônibus)</SelectItem>
                 <SelectItem value="outros">Outros</SelectItem>
               </SelectContent>
             </Select>

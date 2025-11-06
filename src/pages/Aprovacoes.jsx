@@ -1,31 +1,37 @@
-// src/pages/Aprovacoes.jsx
-import React from "react";
+import React, { useState } from "react"; // <-- Importar useState
 import { api } from "@/api/apiClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardCheck, User, Calendar, MapPin, Check, X, Loader2, FileText } from "lucide-react";
+import { ClipboardCheck, User, Calendar, MapPin, Check, X, Loader2, FileText, DollarSign } from "lucide-react"; // <-- Ícones necessários
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { statusConfig, formatarMoeda } from "@/lib/utils";
 
+// 1. IMPORTAR O NOVO MODAL
+import ModalReprovarDespesa from "../components/aprovacoes/ModalReprovarDespesa";
 
 // Componente para um Card de Aprovação de Viagem
 function ViagemCard({ viagem, onAction, isLoading }) {
   return (
     <Card className="border-0 shadow-xl bg-white hover:shadow-2xl transition-shadow">
       <CardHeader className="border-b border-slate-100 flex flex-row justify-between items-center">
-         <CardTitle className="text-lg font-bold text-slate-800">Viagem para {viagem.destino}</CardTitle>
+         <CardTitle className="text-lg font-bold text-slate-800">Missão para {viagem.destino}</CardTitle>
          <Badge variant={statusConfig[viagem.status]?.variant || 'default'} className="border">{statusConfig[viagem.status]?.label}</Badge>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4 mb-6">
           <InfoItem icon={MapPin} label="Trajeto" value={`${viagem.origem} → ${viagem.destino}`} />
           <InfoItem icon={Calendar} label="Período" value={`${format(new Date(viagem.dataIda), "dd MMM yyyy", { locale: ptBR })} a ${format(new Date(viagem.dataVolta), "dd MMM yyyy", { locale: ptBR })}`} />
+          
+          {/* Campo de Motivo (da solicitação anterior) */}
           <InfoItem icon={FileText} label="Motivo" value={viagem.motivo} />
+
+          {/* Campo de Colaborador (da solicitação anterior) */}
           <InfoItem icon={User} label="Colaborador" value={viagem.colaborador?.fullName || 'Não identificado'} />
+        
         </div>
         <ActionButtons onReprove={() => onAction(viagem.id, 'reprovado')} onApprove={() => onAction(viagem.id, 'aprovado')} isLoading={isLoading} />
       </CardContent>
@@ -34,7 +40,7 @@ function ViagemCard({ viagem, onAction, isLoading }) {
 }
 
 // Componente para um Card de Aprovação de Despesa
-function DespesaCard({ despesa, onAction, isLoading }) {
+function DespesaCard({ despesa, onReproveClick, onApproveClick, isLoading }) { // <-- Mudança nas props
   return (
     <Card className="border-0 shadow-xl bg-white hover:shadow-2xl transition-shadow">
       <CardHeader className="border-b border-slate-100 flex flex-row justify-between items-center">
@@ -43,11 +49,17 @@ function DespesaCard({ despesa, onAction, isLoading }) {
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4 mb-6">
-            <InfoItem icon={MapPin} label="Referente à Viagem" value={despesa.viagem.destino} />
+            <InfoItem icon={MapPin} label="Referente à Missão" value={despesa.viagem.destino} />
+            <InfoItem icon={User} label="Colaborador" value={despesa.viagem.colaborador?.fullName || 'Não identificado'} />
             <InfoItem icon={Calendar} label="Data da Despesa" value={format(new Date(despesa.data), "dd/MM/yyyy", { locale: ptBR })} />
             {despesa.descricao && <InfoItem icon={FileText} label="Descrição" value={despesa.descricao} />}
         </div>
-        <ActionButtons onReprove={() => onAction(despesa.id, 'reprovado')} onApprove={() => onAction(despesa.id, 'aprovado')} isLoading={isLoading} />
+        {/* 2. ATUALIZAR OS CLICKS DOS BOTÕES */}
+        <ActionButtons 
+          onReprove={onReproveClick} // <-- Chama a função que abre o modal
+          onApprove={onApproveClick} // <-- Chama a função que aprova direto
+          isLoading={isLoading} 
+        />
       </CardContent>
     </Card>
   );
@@ -81,6 +93,9 @@ const ActionButtons = ({ onReprove, onApprove, isLoading }) => (
 export default function Aprovacoes() {
   const queryClient = useQueryClient();
 
+  // 3. ADICIONAR ESTADO PARA O MODAL
+  const [reprovarModal, setReprovarModal] = useState({ open: false, despesa: null });
+
   const { data: viagens = [] } = useQuery({ queryKey: ['viagens'], queryFn: api.getViagens });
   const viagensPendentes = viagens.filter(v => v.status === 'em_analise');
 
@@ -91,25 +106,42 @@ export default function Aprovacoes() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['viagens'] }),
   });
 
+  // 4. ATUALIZAR A MUTAÇÃO DE DESPESA
   const updateDespesaStatus = useMutation({
-    mutationFn: api.updateDespesaStatus,
+    mutationFn: api.updateDespesa, // <-- Usamos a função de update normal
     onSuccess: () => {
-      // Invalida tanto a busca de despesas pendentes quanto a de viagens (para o dashboard)
       queryClient.invalidateQueries({ queryKey: ['pendingDespesas'] });
       queryClient.invalidateQueries({ queryKey: ['viagens'] });
+      setReprovarModal({ open: false, despesa: null }); // <-- Fechar o modal no sucesso
+    },
+    onError: (err) => {
+      alert("Erro ao atualizar status: " + (err.response?.data?.error || err.message));
+      setReprovarModal({ open: false, despesa: null }); // <-- Fechar o modal no erro
     }
   });
 
-  // --- CORREÇÃO AQUI ---
-  // Criamos funções "empacotadoras" que montam o objeto antes de chamar a mutação
   const handleViagemAction = (id, status) => {
     updateViagemStatus.mutate({ id, status });
   };
 
-  const handleDespesaAction = (id, status) => {
-    updateDespesaStatus.mutate({ id, status });
+  // 5. NOVAS FUNÇÕES PARA APROVAR/REPROVAR DESPESA
+  const handleAprovarDespesa = (despesa) => {
+    updateDespesaStatus.mutate({ id: despesa.id, status: 'aprovado' });
+  };
+  
+  const handleAbrirModalReprovar = (despesa) => {
+    setReprovarModal({ open: true, despesa: despesa });
   };
 
+  const handleConfirmarReprovacao = (justificativa) => {
+    updateDespesaStatus.mutate({
+      id: reprovarModal.despesa.id,
+      status: 'reprovado',
+      justificativaReprovacao: justificativa
+    });
+  };
+
+  // 6. ATUALIZAR O RENDER
   return (
     <div className="p-6 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -126,7 +158,7 @@ export default function Aprovacoes() {
         <Tabs defaultValue="viagens" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="viagens">
-              Viagens Pendentes <Badge className="ml-2">{viagensPendentes.length}</Badge>
+              Missões Pendentes <Badge className="ml-2">{viagensPendentes.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="despesas">
               Despesas Pendentes <Badge className="ml-2">{despesasPendentes.length}</Badge>
@@ -137,11 +169,15 @@ export default function Aprovacoes() {
             <div className="grid gap-4">
               {viagensPendentes.length > 0 ? (
                 viagensPendentes.map((viagem) => (
-                  // Passando a função correta
-                  <ViagemCard key={viagem.id} viagem={viagem} onAction={handleViagemAction} isLoading={updateViagemStatus.isPending} />
+                  <ViagemCard 
+                    key={viagem.id} 
+                    viagem={viagem} 
+                    onAction={handleViagemAction} 
+                    isLoading={updateViagemStatus.isPending} 
+                  />
                 ))
               ) : (
-                <p className="text-center text-slate-500 py-10">Nenhuma viagem pendente.</p>
+                <p className="text-center text-slate-500 py-10">Nenhuma missão pendente.</p>
               )}
             </div>
           </TabsContent>
@@ -150,8 +186,14 @@ export default function Aprovacoes() {
             <div className="grid gap-4">
               {despesasPendentes.length > 0 ? (
                 despesasPendentes.map((despesa) => (
-                  // Passando a função correta
-                  <DespesaCard key={despesa.id} despesa={despesa} onAction={handleDespesaAction} isLoading={updateDespesaStatus.isPending} />
+                  <DespesaCard 
+                    key={despesa.id} 
+                    despesa={despesa} 
+                    // Passa as novas funções
+                    onApproveClick={() => handleAprovarDespesa(despesa)}
+                    onReproveClick={() => handleAbrirModalReprovar(despesa)}
+                    isLoading={updateDespesaStatus.isPending && reprovarModal.despesa?.id === despesa.id} 
+                  />
                 ))
               ) : (
                 <p className="text-center text-slate-500 py-10">Nenhuma despesa pendente.</p>
@@ -160,6 +202,16 @@ export default function Aprovacoes() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* 7. RENDERIZAR O MODAL DE REPROVAÇÃO */}
+      {reprovarModal.open && (
+        <ModalReprovarDespesa
+          open={true}
+          onClose={() => setReprovarModal({ open: false, despesa: null })}
+          onConfirm={handleConfirmarReprovacao}
+          isLoading={updateDespesaStatus.isPending}
+        />
+      )}
     </div>
   );
 }
