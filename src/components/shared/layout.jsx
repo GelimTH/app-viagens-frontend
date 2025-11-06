@@ -7,7 +7,8 @@ import { useSidebar } from '@/hooks/useSidebar';
 import { Button } from '@/components/ui/button';
 import {
   Plane, Home, FileText, History, User,
-  LogOut, Menu, ClipboardCheck, Settings, BookOpen, Hotel, Megaphone
+  LogOut, Menu, ClipboardCheck, Settings,
+  BookOpen, Hotel, Megaphone, Users
 } from 'lucide-react';
 // 1. Importe a versão do seu `package.json`
 import { version } from '../../../package.json';
@@ -73,6 +74,14 @@ function SidebarContent() {
       navigationItems.push({ title: "Aprovações", to: "/app/aprovacoes", icon: ClipboardCheck });
     }
 
+    // ==================================================
+    // NOVO BLOCO APENAS PARA DESENVOLVEDORES
+    // ==================================================
+    if (role === 'DESENVOLVEDOR') {
+      navigationItems.push({ title: "Admin Usuários", to: "/app/admin", icon: Users });
+    }
+    // ==================================================
+    
     navigationItems.push({ title: "Histórico", to: "/app/historico", icon: History });
   }
 

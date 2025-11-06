@@ -171,4 +171,15 @@ export const api = {
     const response = await apiClient.get(`/viagens/${viagemId}/comunicados`);
     return response.data;
   },
+
+  // --- Funções de Admin (NOVAS) ---
+  adminGetUsers: async () => {
+    const response = await apiClient.get('/admin/users');
+    return response.data;
+  },
+
+  adminUpdateUserRole: async ({ id, role }) => {
+    const response = await apiClient.patch(`/admin/users/${id}`, { role });
+    return response.data;
+  },
 };

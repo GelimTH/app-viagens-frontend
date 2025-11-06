@@ -27,6 +27,8 @@ import VisaoGeralViagemPage from './pages/viagem/VisaoGeralPage';
 import ItinerarioViagemPage from './pages/viagem/ItinerarioPage';
 import HotelViagemPage from './pages/viagem/HotelPage';
 import ComunicadosViagemPage from './pages/viagem/ComunicadosPage';
+import AdminUsuarios from './pages/AdminUsuarios.jsx';
+
 
 // Crie uma instância do "gerenciador" de queries
 const queryClient = new QueryClient();
@@ -55,6 +57,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               {/*<Route path="chatia" element={<ChatIA />} />*/}
               <Route path="viagens/editar/:id" element={<EditarViagem />} />
               <Route path="despesas/editar/:id" element={<EditarDespesa />} />
+
+              {/* ================================================== */}
+              {/* NOVA ROTA DE ADMIN */}
+              {/* ================================================== */}
+              <Route path="admin" element={<AdminUsuarios />} />
 
               <Route path="minha-viagem" element={<MinhaViagemLayout />}>
                 <Route index element={<VisaoGeralViagemPage />} />
