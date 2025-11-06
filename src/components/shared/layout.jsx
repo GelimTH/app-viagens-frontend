@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { useSidebar } from '@/hooks/useSidebar';
 import { Button } from '@/components/ui/button';
-import { 
-    Plane, Home, FileText, History, User, 
-    LogOut, Menu, ClipboardCheck, Settings, BookOpen, Hotel, Megaphone 
+import {
+  Plane, Home, FileText, History, User,
+  LogOut, Menu, ClipboardCheck, Settings, BookOpen, Hotel, Megaphone
 } from 'lucide-react';
 // 1. Importe a versão do seu `package.json`
 import { version } from '../../../package.json';
+import { useQueryClient } from '@tanstack/react-query';
 
 function SidebarContent() {
   const { data: user } = useQuery({
@@ -19,6 +20,7 @@ function SidebarContent() {
   });
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -36,6 +38,7 @@ function SidebarContent() {
   }, [menuRef]);
 
   const handleLogout = () => {
+    queryClient.clear();
     // Esta é a função que criamos no apiClient.js
     api.logout();
     // Redireciona para a página de login
@@ -53,7 +56,7 @@ function SidebarContent() {
       { title: "Itinerário", to: "/app/minha-viagem/itinerario", icon: BookOpen },
       { title: "Hotel", to: "/app/minha-viagem/hotel", icon: Hotel },
       { title: "Comunicados", to: "/app/minha-viagem/comunicados", icon: Megaphone },
-      
+
       // (Prestação de contas do visitante pode vir aqui no futuro)
       // { title: "Minhas Despesas", to: "/app/prestacaocontas", icon: FileText },
     ];
@@ -69,7 +72,7 @@ function SidebarContent() {
     if (role === 'GESTOR' || role === 'ASSESSOR_DIRETOR' || role === 'DESENVOLVEDOR') {
       navigationItems.push({ title: "Aprovações", to: "/app/aprovacoes", icon: ClipboardCheck });
     }
-    
+
     navigationItems.push({ title: "Histórico", to: "/app/historico", icon: History });
   }
 
@@ -117,9 +120,9 @@ function SidebarContent() {
                 </NavLink>
               </li>
               <li>
-                <button 
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-colors">
                   <LogOut className="w-4 h-4" />
                   <span>Sair</span>
                 </button>
