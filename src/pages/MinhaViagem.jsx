@@ -1,20 +1,19 @@
-// src/pages/MinhaViagem.jsx
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import { Plane, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TimelineItem from '../components/minha-viagem/TimelineItem'; // (Este componente nós criamos no P1)
+import TimelineItem from '../components/minha-viagem/TimelineItem';
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
-import UploadNota from '../components/prestacao/UploadNota'; // (Este componente nós criamos no P3)
+import UploadNota from '../components/prestacao/UploadNota';
 
-// Chaves para o cache (P5.C)
 const CACHE_VIAGEM_KEY = 'minhaViagemCache';
 
-// Componente para o Card de Resumo
+// Componente de Resumo (sem mudanças)
 function ResumoViagem({ viagem, gestor }) {
+  // ... (O código deste componente não precisa mudar) ...
   return (
     <Card className="border-0 shadow-xl bg-white">
       <CardHeader className="border-b border-slate-100 pb-4">
@@ -41,65 +40,77 @@ function ResumoViagem({ viagem, gestor }) {
   );
 }
 
-// Página Principal
+
+// Página Principal (COM LOGS)
 export default function MinhaViagem() {
+  console.log("LOG 1: Componente MinhaViagem.jsx RENDERIZOU.");
+
   const [dadosViagem, setDadosViagem] = useState(null);
   const queryClient = useQueryClient();
   const [modalDespesaAberto, setModalDespesaAberto] = useState(false);
   const [eventoSelecionadoId, setEventoSelecionadoId] = useState(null);
 
-  // --- CORREÇÃO DO BUG ---
-  // 1. Tenta ler do cache primeiro (P5.C)
   useEffect(() => {
     try {
       const viagemCache = localStorage.getItem(CACHE_VIAGEM_KEY);
       if (viagemCache) {
+        console.log("LOG 2: Encontrado dados no cache. Carregando...");
         setDadosViagem(JSON.parse(viagemCache));
+      } else {
+        console.log("LOG 2: Nenhum dado encontrado no cache.");
       }
     } catch (error) {
-      console.warn("Falha ao ler cache:", error);
+      console.warn("LOG 2: Falha ao ler cache:", error);
     }
-  }, []);
+  }, []); // Executa apenas uma vez
 
-  // 2. Busca os dados da viagem (AGORA ESTÁ HABILITADO)
-  const { isLoading: isLoadingViagem, error: errorViagem } = useQuery({
-    queryKey: ['minhaViagem'], // Não depende mais do user.id
-    queryFn: api.getMinhaViagem,
+  const { 
+    data: queryData, // Renomeado para 'queryData' para evitar conflito com o 'dadosViagem' do state
+    isLoading: isLoadingViagem, 
+    error: errorViagem 
+  } = useQuery({
+    queryKey: ['minhaViagem'],
+    queryFn: () => {
+      console.log("LOG 3: BUSCANDO DADOS da api.getMinhaViagem...");
+      return api.getMinhaViagem();
+    },
     enabled: true, // Garante que a query rode
     onSuccess: (data) => {
-      setDadosViagem(data);
+      console.log("LOG 4: SUCESSO. Dados recebidos da API:", data);
+      setDadosViagem(data); // Define o estado com os dados
       localStorage.setItem(CACHE_VIAGEM_KEY, JSON.stringify(data));
     },
+    onError: (error) => {
+        console.error("LOG 5: ERRO na query 'minhaViagem':", error);
+    }
   });
-  // --- FIM DA CORREÇÃO ---
 
   const viagemId = dadosViagem?.viagem?.id;
-  const timeline = dadosViagem?.viagem?.eventos || []; // Pega os eventos de dentro da viagem
+  const timeline = dadosViagem?.viagem?.eventos || [];
 
+  // (Handlers de mutação e modal - sem mudanças)
   const createDespesaMutation = useMutation({
     mutationFn: api.createDespesa,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['minhaViagem'] }); // Atualiza os dados
+      queryClient.invalidateQueries({ queryKey: ['minhaViagem'] });
       handleFecharModalDespesa();
     },
-    onError: (err) => {
-      console.error("Erro ao criar despesa:", err);
-      alert("Erro ao salvar despesa.");
-    }
+    onError: (err) => { console.error("Erro ao criar despesa:", err); alert("Erro ao salvar despesa."); }
+  });
+  const handleAbrirModalDespesa = (eventoId) => { setEventoSelecionadoId(eventoId); setModalDespesaAberto(true); };
+  const handleFecharModalDespesa = () => { setEventoSelecionadoId(null); setModalDespesaAberto(false); };
+
+
+  // --- TRATAMENTO DE ERRO / RASTREAMENTO ---
+  console.log("LOG 6: ESTADO ATUAL (antes de renderizar):", {
+    isLoadingViagem,
+    errorViagem: errorViagem ? errorViagem.message : null,
+    dadosViagem: dadosViagem, // Este é o state
+    queryData: queryData      // Este é o retorno direto da useQuery
   });
 
-  const handleAbrirModalDespesa = (eventoId) => {
-    setEventoSelecionadoId(eventoId);
-    setModalDespesaAberto(true);
-  };
-
-  const handleFecharModalDespesa = () => {
-    setEventoSelecionadoId(null);
-    setModalDespesaAberto(false);
-  };
-
-  // --- Tratamento de Loading e Erros ---
-  if (isLoadingViagem && !dadosViagem) { // Mostra loading se não tiver NADA (nem cache)
+  if (isLoadingViagem && !dadosViagem) {
+    console.log("LOG 7: Renderizando: LOADING (aguardando dados da rede, sem cache)");
     return (
       <div className="p-8 flex items-center justify-center gap-2 text-slate-600">
         <Loader2 className="w-5 h-5 animate-spin" />
@@ -108,7 +119,8 @@ export default function MinhaViagem() {
     );
   }
 
-  if (errorViagem && !dadosViagem) { // Mostra erro se falhar E não tiver cache
+  if (errorViagem && !dadosViagem) {
+    console.log("LOG 7: Renderizando: ERRO DA QUERY (e sem cache)");
     return (
       <div className="p-8 text-red-600 flex items-center justify-center gap-2">
         <AlertCircle className="w-5 h-5" />
@@ -117,10 +129,13 @@ export default function MinhaViagem() {
     );
   }
 
-  if (!dadosViagem || !dadosViagem.viagem) { // Mostra se a API não retornar dados (ou o cache estiver vazio)
+  if (!dadosViagem || !dadosViagem.viagem) {
+    console.log("LOG 7: Renderizando: 'Nenhuma viagem encontrada' (query terminou, mas dados são nulos ou inválidos)");
     return <div className="p-8 text-center text-slate-500">Nenhuma viagem encontrada para você.</div>;
   }
   
+  // Se chegou aqui, os dados existem
+  console.log("LOG 8: Renderizando: SUCESSO (Timeline e Dados da Viagem)");
   const { viagem, gestor } = dadosViagem;
 
   return (
