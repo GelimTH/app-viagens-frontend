@@ -85,6 +85,8 @@ export default function ListaDespesas({ despesas }) {
     setHoveredFile(null);
   };
 
+  const solicitante = viagem?.colaborador?.fullName || "Solicitante";
+
   return (
     <>
       <Card className="border-0 shadow-xl bg-white">
