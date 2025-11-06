@@ -1,4 +1,3 @@
-// src/components/prestacao/ListaDespesas.jsx
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -6,7 +5,6 @@ import { api } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-// 1. IMPORTAR O ÍCONE DE USUÁRIO
 import { File, Image, Calendar, Edit, Trash2, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -20,22 +18,28 @@ const tipoLabels = {
   outros: "Outros"
 };
 
-// ==================================================
-//  CORREÇÃO CRÍTICA AQUI
-// ==================================================
-// Precisamos garantir que a função aceite 'viagem' como uma prop.
+// 1. A prop 'viagem' deve ser recebida aqui
 export default function ListaDespesas({ despesas, viagem }) {
+  
+  // ==================================================
+  //  LOG DE DEPURAÇÃO
+  // ==================================================
+  // Vamos verificar o que está chegando na prop 'viagem'
+  console.log("[ListaDespesas] Prop 'viagem' recebida:", viagem);
+  // ==================================================
+
   const totalDespesas = despesas.reduce((sum, d) => sum + (d.valor || 0), 0);
   const queryClient = useQueryClient();
 
   const [viewingUrl, setViewingUrl] = useState(null);
 
-  // Estados para a pré-visualização em miniatura
+  // ... (Estados de hover e miniatura) ...
   const [hoveredFile, setHoveredFile] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
   const [hoverTimeoutId, setHoverTimeoutId] = useState(null);
 
   const deleteDespesaMutation = useMutation({
+    // ... (função de deletar) ...
     mutationFn: api.deleteDespesa,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['despesas'] });
@@ -49,39 +53,20 @@ export default function ListaDespesas({ despesas, viagem }) {
     }
   };
 
+  // ... (funções de handleMouseEnter/Leave) ...
   const handleMouseEnter = (event, url) => {
-    // 1. Pega a posição do botão
     const rect = event.currentTarget.getBoundingClientRect();
-
     const id = setTimeout(() => {
-      // 2. Define o tamanho aproximado do preview (baseado no max-w-xs e max-h-48 do seu CSS)
-      const previewWidth = 340;  // 20rem (320px) + 20px de margem
-      const previewHeight = 210; // 12rem (192px) + 18px de margem
-
-      // 3. Calcula a posição 'left' (horizontal)
-      let left = rect.right + 10; // Tenta colocar à direita do botão
-      if (left + previewWidth > window.innerWidth) {
-        // Se estourar a tela, coloca à esquerda do botão
-        left = rect.left - previewWidth - 10;
-      }
-      
-      // 4. Calcula a posição 'top' (vertical)
-      let top = rect.top; // Tenta alinhar ao topo do botão
-      if (top + previewHeight > window.innerHeight) {
-        // Se estourar a tela, alinha pela parte de baixo do botão
-        top = rect.bottom - previewHeight;
-      }
-      
-      // 5. Garante que não saia do topo da tela
-      if (top < 0) {
-        top = 10; // Uma pequena margem do topo
-      }
-
-      // 6. Atualiza a posição e o arquivo a ser mostrado
-      setHoverPosition({ top: top, left: left });
+      const previewWidth = 340;
+      const previewHeight = 210;
+      let left = rect.right + 10;
+      if (left + previewWidth > window.innerWidth) left = rect.left - previewWidth - 10;
+      let top = rect.top;
+      if (top + previewHeight > window.innerHeight) top = rect.bottom - previewHeight;
+      if (top < 0) top = 10;
+      setHoverPosition({ top, left });
       setHoveredFile(url);
-    }, 500); // Atraso de meio segundo
-    
+    }, 500);
     setHoverTimeoutId(id);
   };
 
@@ -90,7 +75,7 @@ export default function ListaDespesas({ despesas, viagem }) {
     setHoveredFile(null);
   };
   
-  // A 'viagem' agora está definida, então esta linha funciona
+  // 2. A constante 'solicitante' deve ser definida aqui
   const solicitante = viagem?.colaborador?.fullName || "Solicitante";
 
   return (
@@ -122,19 +107,17 @@ export default function ListaDespesas({ despesas, viagem }) {
                         <p className="text-sm text-slate-600 mb-2">{despesa.descricao}</p>
                         
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
-                          {/* ITEM USUÁRIO */}
+                          {/* 3. A variável 'solicitante' é renderizada aqui */}
                           <span className="flex items-center gap-1.5" title="Solicitante da Despesa">
                             <User className="w-4 h-4" /> 
                             {solicitante}
                           </span>
                           
-                          {/* ITEM DATA */}
                           <span className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4" /> 
                             {format(new Date(despesa.data), "dd/MM/yyyy", { locale: ptBR })}
                           </span>
                           
-                          {/* ITEM VALOR */}
                           <span className="font-bold text-green-600">{formatarMoeda(despesa.valor)}</span>
                         </div>
                       </div>
