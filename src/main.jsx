@@ -18,10 +18,15 @@ import Perfil from './pages/Perfil.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import RegisterVisitante from './pages/RegisterVisitante.jsx';
-import MinhaViagem from './pages/MinhaViagem.jsx';
+import MinhaViagem from './pages/MinhaViagemLayout.jsx';
 import EditarViagem from './pages/EditarViagem.jsx';
 import Aprovacoes from './pages/Aprovacoes.jsx';
 import EditarDespesa from './pages/EditarDespesa.jsx';
+import MinhaViagemLayout from './pages/MinhaViagemLayout';
+import VisaoGeralViagemPage from './pages/viagem/VisaoGeralPage';
+import ItinerarioViagemPage from './pages/viagem/ItinerarioPage';
+import HotelViagemPage from './pages/viagem/HotelPage';
+import ComunicadosViagemPage from './pages/viagem/ComunicadosPage';
 
 // Crie uma instância do "gerenciador" de queries
 const queryClient = new QueryClient();
@@ -36,7 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register-visitante" element={<RegisterVisitante />} />
-            
+
             {/* O resto do aplicativo agora vive dentro de "/app" */}
             <Route path="/app" element={<App />}>
               {/* A rota inicial de "/app" será o dashboard */}
@@ -50,7 +55,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               {/*<Route path="chatia" element={<ChatIA />} />*/}
               <Route path="viagens/editar/:id" element={<EditarViagem />} />
               <Route path="despesas/editar/:id" element={<EditarDespesa />} />
-              <Route path="minha-viagem" element={<MinhaViagem />} />
+
+              <Route path="minha-viagem" element={<MinhaViagemLayout />}>
+                <Route index element={<VisaoGeralViagemPage />} />
+                <Route path="itinerario" element={<ItinerarioViagemPage />} />
+                <Route path="hotel" element={<HotelViagemPage />} />
+                <Route path="comunicados" element={<ComunicadosViagemPage />} />
+              </Route>
+
             </Route>
           </Routes>
         </SidebarProvider> {/* 2. LINHA ADICIONADA */}
