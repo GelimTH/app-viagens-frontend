@@ -172,6 +172,11 @@ export const api = {
     return response.data;
   },
 
+  createComunicado: async ({ viagemId, titulo, conteudo }) => {
+    const response = await apiClient.post(`/viagens/${viagemId}/comunicados`, { titulo, conteudo });
+    return response.data;
+  },
+
   // --- Funções de Admin (NOVAS) ---
   adminGetUsers: async () => {
     const response = await apiClient.get('/admin/users');
