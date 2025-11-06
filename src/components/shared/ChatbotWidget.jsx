@@ -1,4 +1,3 @@
-// src/components/shared/ChatbotWidget.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
