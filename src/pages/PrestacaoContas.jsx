@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { api } from "@/api/apiClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileText, Camera } from "lucide-react";
+import { FileText, Camera, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import SelecionarViagem from "../components/prestacao/SelecionarViagem";
@@ -65,8 +65,15 @@ export default function PrestacaoContas() {
           <>
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Viagem: {viagemSelecionada.destino}</h2>
-                <p className="text-slate-600">{despesas.length} despesa(s) registrada(s)</p>
+                <h2 className="text-xl font-bold text-slate-900">Missão: {viagemSelecionada.destino}</h2>
+                <div className="flex items-center gap-2 text-slate-600 mt-1">
+                  <User className="w-4 h-4" />
+                  <span className="font-medium" title="Solicitante da Missão">
+                    {viagemSelecionada.colaborador?.fullName || 'Solicitante não encontrado'}
+                  </span>
+                  <span className="text-slate-400">|</span>
+                  <span>{despesas.length} despesa(s) registrada(s)</span>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => { setViagemSelecionada(null); setMostrarFormulario(false); }}>

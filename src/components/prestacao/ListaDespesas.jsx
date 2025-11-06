@@ -6,7 +6,7 @@ import { api } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { File, Image, Calendar, Edit, Trash2 } from "lucide-react";
+import { File, Image, Calendar, Edit, Trash2, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { statusConfig, formatarMoeda } from "@/lib/utils";
@@ -59,14 +59,14 @@ export default function ListaDespesas({ despesas }) {
         // Se estourar a tela, coloca à esquerda do botão
         left = rect.left - previewWidth - 10;
       }
-      
+
       // 4. Calcula a posição 'top' (vertical)
       let top = rect.top; // Tenta alinhar ao topo do botão
       if (top + previewHeight > window.innerHeight) {
         // Se estourar a tela, alinha pela parte de baixo do botão
         top = rect.bottom - previewHeight;
       }
-      
+
       // 5. Garante que não saia do topo da tela
       if (top < 0) {
         top = 10; // Uma pequena margem do topo
@@ -76,7 +76,7 @@ export default function ListaDespesas({ despesas }) {
       setHoverPosition({ top: top, left: left });
       setHoveredFile(url);
     }, 500); // Atraso de meio segundo
-    
+
     setHoverTimeoutId(id);
   };
 
@@ -112,7 +112,12 @@ export default function ListaDespesas({ despesas }) {
                       <div className="flex-1">
                         <p className="font-bold text-slate-900">{tipoLabels[despesa.tipo]}</p>
                         <p className="text-sm text-slate-600 mb-2">{despesa.descricao}</p>
-                        <div className="flex items-center gap-4 text-sm text-slate-500">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                          {/* NOVO ITEM: USUÁRIO */}
+                          <span className="flex items-center gap-1.5" title="Solicitante da Despesa">
+                            <User className="w-4 h-4" />
+                            {solicitante}
+                          </span>
                           <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {format(new Date(despesa.data), "dd/MM/yyyy", { locale: ptBR })}</span>
                           <span className="font-bold text-green-600">{formatarMoeda(despesa.valor)}</span>
                         </div>
