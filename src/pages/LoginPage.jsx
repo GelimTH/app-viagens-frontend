@@ -1,6 +1,3 @@
-// src/pages/LoginPage.jsx
-// VERSÃO CORRIGIDA (sem <style jsx>)
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/api/apiClient';
@@ -9,23 +6,21 @@ import { User, Building, Mail, Lock, Key } from 'lucide-react';
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState('colaborador');
-
   const [showPassword, setShowPassword] = useState(false);
   const [showToken, setShowToken] = useState(false);
 
-  // --- Lógica de Estado ---
+  // --- Estados ---
   const [collaboratorEmail, setCollaboratorEmail] = useState('');
   const [collaboratorPassword, setCollaboratorPassword] = useState('');
   const [collaboratorError, setCollaboratorError] = useState('');
-  const [collaboratorLoading, setCollaboratorLoading] = useState(false); // Loading para Colaborador
+  const [collaboratorLoading, setCollaboratorLoading] = useState(false);
 
   const [externalEmail, setExternalEmail] = useState('');
-  const [externalToken, setExternalToken] = useState('');
+  const [externalToken, setExternalToken] = useState(''); // Este é o campo "senha" do visitante
   const [externalError, setExternalError] = useState('');
-  const [externalLoading, setExternalLoading] = useState(false); // Loading para Visitante
+  const [externalLoading, setExternalLoading] = useState(false);
 
   const navigate = useNavigate();
-  // -----------------------
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -41,12 +36,18 @@ export default function LoginPage() {
     setCollaboratorLoading(true);
 
     try {
-      const response = await api.login({ email: collaboratorEmail, password: collaboratorPassword });
-      localStorage.setItem('authToken', response.token); // Salva o token
+      // ==================================================
+      // CORREÇÃO #1 AQUI
+      // ==================================================
+      const response = await api.login({
+        email: collaboratorEmail,
+        password: collaboratorPassword,
+        loginAs: 'colaborador' // <-- Adiciona o tipo
+      });
+      // ==================================================
 
-      // ===========================================
-      // ATUALIZAÇÃO DO REDIRECIONAMENTO
-      // ===========================================
+      localStorage.setItem('authToken', response.token); 
+
       if (response.user.role === 'VISITANTE') {
         navigate('/app/minha-viagem');
       } else {
@@ -54,10 +55,9 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error('Erro no login do Colaborador:', err);
-      setCollaboratorError('Email ou senha inválidos.');
-      setCollaboratorLoading(false); // Desativa o loading no erro
+      setCollaboratorError(err.response?.data?.error || 'Email ou senha inválidos.');
+      setCollaboratorLoading(false);
     }
-    // Não desative o loading no sucesso, pois a página vai navegar
   };
 
   // --- Lógica de Login (Visitante) ---
@@ -67,32 +67,37 @@ export default function LoginPage() {
     setExternalLoading(true);
 
     try {
-      // Usa a API de login real
-      const response = await api.login({ email: externalEmail, password: externalToken });
-      localStorage.setItem('authToken', response.token); // Salva o token
+      // ==================================================
+      // CORREÇÃO #2 AQUI
+      // ==================================================
+      // O backend espera 'password', então passamos o 'externalToken' como 'password'
+      const response = await api.login({
+        email: externalEmail,
+        password: externalToken,
+        loginAs: 'visitante' // <-- Adiciona o tipo
+      });
+      // ==================================================
 
-      // ===========================================
-      // ATUALIZAÇÃO DO REDIRECIONAMENTO
-      // ===========================================
+      localStorage.setItem('authToken', response.token); 
+
       if (response.user.role === 'VISITANTE') {
         navigate('/app/minha-viagem');
       } else {
-        // (Caso um colaborador tente logar na aba de visitante)
         navigate('/app/dashboard');
       }
     } catch (err) {
       console.error('Erro no login do Visitante:', err);
-      setExternalError('Email ou Token de Acesso inválido.');
-      setExternalLoading(false); // Para o loading no erro
+      setExternalError(err.response?.data?.error || 'Email ou Token de Acesso inválido.');
+      setExternalLoading(false);
     }
   };
-  // -------------------------------------------------
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
 
+          {/* (Header - sem mudança) */}
           <div className="flex justify-center items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
               <Plane className="w-6 h-6 text-white" />
@@ -103,6 +108,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* (Abas - sem mudança) */}
           <div className="flex mb-8 bg-slate-100 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('colaborador')}
@@ -128,6 +134,7 @@ export default function LoginPage() {
           <div className="transition-all duration-300 ease-in-out">
             {activeTab === 'colaborador' && (
               <div className="animate-fadeIn">
+                {/* (Header Colaborador - sem mudança) */}
                 <div className="flex items-center justify-center mb-6">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
                     <User className="w-8 h-8 text-blue-600" />
@@ -140,8 +147,8 @@ export default function LoginPage() {
                   Sou da equipe interna
                 </p>
 
+                {/* (Form Colaborador - sem mudança de layout) */}
                 <form onSubmit={handleCollaboratorSubmit} className="space-y-6">
-                  {/* ... (Input de Email) ... */}
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -158,7 +165,6 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  {/* ... (Input de Senha) ... */}
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -213,6 +219,7 @@ export default function LoginPage() {
 
             {activeTab === 'visitante' && (
               <div className="animate-fadeIn">
+                {/* (Header Visitante - sem mudança) */}
                 <div className="flex items-center justify-center mb-6">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                     <Building className="w-8 h-8 text-green-600" />
@@ -225,8 +232,8 @@ export default function LoginPage() {
                   Sou externo / cliente
                 </p>
 
+                {/* (Form Visitante - sem mudança de layout) */}
                 <form onSubmit={handleExternalSubmit} className="space-y-6">
-                  {/* ... (Input de Email Visitante) ... */}
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -243,12 +250,11 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  {/* ... (Input de Token Visitante) ... */}
                   <div className="relative">
                     <Key className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type={showToken ? 'text' : 'password'}
-                      placeholder="Token de Acesso"
+                      placeholder="Senha (é o seu token de convite)" // Texto de placeholder atualizado
                       value={externalToken}
                       onChange={(e) => setExternalToken(e.target.value)}
                       required
@@ -298,8 +304,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* BLOCO <style jsx> COMPLETAMENTE REMOVIDO */}
     </div>
   );
 }
