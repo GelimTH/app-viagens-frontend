@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Calendar, MapPin, Briefcase, Plane, Hotel } from 'lucide-react';
+import { Plus, Trash2, Calendar, MapPin, Briefcase, Plane, Hotel, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -15,7 +15,8 @@ function FormNovoEvento({ onAddEvento }) {
         tipo: 'reuniao',
         titulo: '',
         dataHoraInicio: '',
-        local: ''
+        local: '',
+        descricao: ''
     });
 
     const handleSubmit = (e) => {
@@ -48,6 +49,7 @@ function FormNovoEvento({ onAddEvento }) {
                             <SelectItem value="voo">Voo</SelectItem>
                             <SelectItem value="hotel">Hotel (Check-in/out)</SelectItem>
                             <SelectItem value="transfer">Transfer/Deslocamento</SelectItem>
+                            <SelectItem value="outros">Outros</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -67,6 +69,14 @@ function FormNovoEvento({ onAddEvento }) {
         </form>
     );
 }
+
+const tipoIcones = {
+    'reuniao': <Briefcase className="w-4 h-4 text-green-700" />,
+    'voo': <Plane className="w-4 h-4 text-blue-700" />,
+    'hotel': <Hotel className="w-4 h-4 text-purple-700" />,
+    'transfer': <MapPin className="w-4 h-4 text-orange-700" />,
+    'outros': <Clock className="w-4 h-4 text-slate-700" />,
+};
 
 // Componente principal
 export default function EtapaAgenda({ eventos, setEventos, onVoltar, onAvancar }) {
@@ -97,6 +107,9 @@ export default function EtapaAgenda({ eventos, setEventos, onVoltar, onAvancar }
                         ) : (
                             eventos.map((evento, index) => (
                                 <div key={index} className="flex items-center gap-3 p-3 rounded-lg border bg-slate-50">
+                                    <div className="flex-shrink-0">
+                                        {tipoIcones[evento.tipo] || tipoIcones['outros']}
+                                    </div>
                                     <div className="flex-1">
                                         <p className="font-semibold text-slate-900">{evento.titulo} ({evento.tipo})</p>
                                         <p className="text-sm text-slate-600">

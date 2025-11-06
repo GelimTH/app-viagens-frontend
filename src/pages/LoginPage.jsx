@@ -104,7 +104,7 @@ export default function LoginPage() {
             </div>
             <div>
               <h2 className="font-bold text-xl text-slate-900">Embarque Coração</h2>
-              <p className="text-xs text-slate-500 font-medium">SGV - Sistema Gestor de Viagem</p>
+              <p className="text-xs text-slate-500 font-medium">SGV - Sistema Gestão de Viagens</p>
             </div>
           </div>
 

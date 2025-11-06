@@ -36,7 +36,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Custo Total Estimado (Opções Recomendadas):', 14, cursorY);
+  doc.text('Custo Total Estimado Por Pessoa (Opções Recomendadas):', 14, cursorY);
   doc.setFontSize(16);
   doc.setTextColor(34, 139, 34);
   doc.text(formatarMoeda(sugestoes.valor_estimado), 14, cursorY + 8);
