@@ -166,4 +166,9 @@ export const api = {
     });
     return response.data; // Retorna { avg, min, max, count }
   },
+
+  getComunicados: async (viagemId) => {
+    const response = await apiClient.get(`/viagens/${viagemId}/comunicados`);
+    return response.data;
+  },
 };

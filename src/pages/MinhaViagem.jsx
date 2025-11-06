@@ -1,20 +1,27 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Plane, Calendar, Loader2, AlertCircle, Phone } from 'lucide-react'; // <-- Importe o ícone Phone
+import { 
+  Plane, 
+  Calendar, 
+  Loader2, 
+  AlertCircle, 
+  Phone, 
+  Megaphone 
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TimelineItem from '../components/minha-viagem/TimelineItem';
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 import UploadNota from '../components/prestacao/UploadNota';
-import { Button } from '@/components/ui/button'; // <-- Importe o Button
+import { Button } from '@/components/ui/button';
 
-// --- COMPONENTE RESUMOVIAGEM ATUALIZADO ---
+// --- COMPONENTE 1: CARD DE RESUMO (ATUALIZADO) ---
 function ResumoViagem({ viagem, gestor }) {
-  const gestorTelefone = gestor?.profile?.telefone; // Pega o telefone do perfil
+  const gestorTelefone = gestor?.profile?.telefone;
   const whatsappLink = gestorTelefone 
-    ? `https://wa.me/55${gestorTelefone.replace(/\D/g, '')}` // Cria link de WhatsApp
+    ? `https://wa.me/55${gestorTelefone.replace(/\D/g, '')}`
     : null;
 
   return (
@@ -28,7 +35,7 @@ function ResumoViagem({ viagem, gestor }) {
         </p>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
-        {/* Datas (já deveriam estar aqui) */}
+        {/* Datas da Viagem */}
         <div className="flex items-center gap-2 text-slate-700">
           <Calendar className="w-4 h-4" />
           <span className="font-medium">
@@ -40,7 +47,7 @@ function ResumoViagem({ viagem, gestor }) {
           </span>
         </div>
         
-        {/* Contato do Gestor (Novo) */}
+        {/* Contato do Gestor */}
         {whatsappLink && (
           <Button asChild variant="outline" className="w-full">
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
@@ -53,10 +60,48 @@ function ResumoViagem({ viagem, gestor }) {
     </Card>
   );
 }
-// --- FIM DO COMPONENTE ---
+
+// --- COMPONENTE 2: CARD DE COMUNICADOS (NOVO) ---
+function ComunicadosCard({ viagemId }) {
+  const { data: comunicados, isLoading } = useQuery({
+    queryKey: ['comunicados', viagemId],
+    queryFn: () => api.getComunicados(viagemId),
+    enabled: !!viagemId,
+  });
+
+  return (
+    <Card className="border-0 shadow-xl bg-white">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Megaphone className="w-5 h-5 text-blue-600" />
+          Últimos Comunicados
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 space-y-4">
+        {isLoading ? (
+          <p className="text-sm text-slate-500">Buscando comunicados...</p>
+        ) : !comunicados || comunicados.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">
+            Nenhum comunicado recente.
+          </p>
+        ) : (
+          comunicados.map(com => (
+            <div key={com.id} className="border-b pb-3 last:border-b-0">
+              <h4 className="font-semibold text-slate-800">{com.titulo}</h4>
+              <p className="text-sm text-slate-600 mt-1">{com.conteudo}</p>
+              <p className="text-xs text-slate-400 mt-2">
+                {formatDistanceToNow(new Date(com.createdAt), { locale: ptBR, addSuffix: true })}
+              </p>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 
-// Página Principal (Lógica simplificada da última vez)
+// --- PÁGINA PRINCIPAL (Layout Atualizado) ---
 export default function MinhaViagem() {
   const queryClient = useQueryClient();
   const [modalDespesaAberto, setModalDespesaAberto] = React.useState(false);
@@ -75,7 +120,7 @@ export default function MinhaViagem() {
   const viagemId = dadosViagem?.viagem?.id;
   const timeline = dadosViagem?.viagem?.eventos || [];
 
-  // Handlers
+  // Handlers (sem mudança)
   const createDespesaMutation = useMutation({
     mutationFn: api.createDespesa,
     onSuccess: () => {
@@ -92,7 +137,6 @@ export default function MinhaViagem() {
     return (
       <div className="p-8 flex items-center justify-center gap-2 text-slate-600">
         <Loader2 className="w-5 h-5 animate-spin" />
-        Carregando dados da sua viagem...
       </div>
     );
   }
@@ -114,49 +158,56 @@ export default function MinhaViagem() {
 
   return (
     <div className="p-6 md:p-8">
-      <div className="max-w-3xl mx-auto space-y-6">
+      {/* Header (sem mudança) */}
+      <div className="max-w-7xl mx-auto flex items-center gap-4 mb-6">
+        <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <Plane className="w-7 h-7 text-white" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Meu Itinerário</h1>
+          <p className="text-slate-600">Aqui está o cronograma da sua viagem.</p>
+        </div>
+      </div>
+      
+      {/* --- NOVO LAYOUT EM COLUNAS --- */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Plane className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Meu Itinerário</h1>
-            <p className="text-slate-600">Aqui está o cronograma da sua viagem.</p>
-          </div>
+        {/* Coluna da Esquerda (Mais larga) */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-0 shadow-xl bg-white">
+            <CardHeader>
+              <CardTitle>Linha do Tempo</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {!timeline || timeline.length === 0 ? (
+                <p className="text-slate-500 text-center py-4">
+                  Nenhum evento de itinerário cadastrado.
+                </p>
+              ) : (
+                timeline.map((evento, index) => (
+                  <TimelineItem
+                    key={evento.id}
+                    evento={evento}
+                    isPrimeiro={index === 0}
+                    isUltimo={index === timeline.length - 1}
+                    onAddDespesa={handleAbrirModalDespesa}
+                  />
+                ))
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Card de Resumo agora com WhatsApp */}
-        <ResumoViagem viagem={viagem} gestor={gestor} />
+        {/* Coluna da Direita (Mais estreita) */}
+        <div className="lg:col-span-1 space-y-6">
+          <ResumoViagem viagem={viagem} gestor={gestor} />
+          <ComunicadosCard viagemId={viagem.id} />
+        </div>
 
-        {/* Card da Timeline */}
-        <Card className="border-0 shadow-xl bg-white">
-          <CardHeader>
-            <CardTitle>Linha do Tempo</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            {!timeline || timeline.length === 0 ? (
-              <p className="text-slate-500 text-center py-4">
-                Nenhum evento de itinerário cadastrado. Crie uma nova viagem e adicione eventos para vê-los aqui.
-              </p>
-            ) : (
-              timeline.map((evento, index) => (
-                <TimelineItem
-                  key={evento.id}
-                  evento={evento}
-                  isPrimeiro={index === 0}
-                  isUltimo={index === timeline.length - 1}
-                  onAddDespesa={handleAbrirModalDespesa}
-                />
-              ))
-            )}
-          </CardContent>
-        </Card> 
-
-        {/* TODO: Card de Comunicados (P6) */}
       </div>
+      {/* --- FIM DO NOVO LAYOUT --- */}
 
-      {/* Modal de Despesa */}
+      {/* Modal de Despesa (sem mudança) */}
       <Modal open={modalDespesaAberto} onClose={handleFecharModalDespesa} widthClass="max-w-2xl">
         <ModalHeader onClose={handleFecharModalDespesa}>
           Registrar Nova Despesa
