@@ -24,7 +24,8 @@ function ViagemCard({ viagem, onAction, isLoading }) {
         <div className="space-y-4 mb-6">
           <InfoItem icon={MapPin} label="Trajeto" value={`${viagem.origem} → ${viagem.destino}`} />
           <InfoItem icon={Calendar} label="Período" value={`${format(new Date(viagem.dataIda), "dd MMM yyyy", { locale: ptBR })} a ${format(new Date(viagem.dataVolta), "dd MMM yyyy", { locale: ptBR })}`} />
-          <InfoItem icon={User} label="Colaborador" value="João Colaborador" />
+          <InfoItem icon={FileText} label="Motivo" value={viagem.motivo} />
+          <InfoItem icon={User} label="Colaborador" value={viagem.colaborador?.fullName || 'Não identificado'} />
         </div>
         <ActionButtons onReprove={() => onAction(viagem.id, 'reprovado')} onApprove={() => onAction(viagem.id, 'aprovado')} isLoading={isLoading} />
       </CardContent>
