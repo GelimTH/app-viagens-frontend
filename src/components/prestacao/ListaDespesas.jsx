@@ -20,13 +20,6 @@ const tipoLabels = {
 
 // 1. A prop 'viagem' deve ser recebida aqui
 export default function ListaDespesas({ despesas, viagem }) {
-  
-  // ==================================================
-  //  LOG DE DEPURAÇÃO
-  // ==================================================
-  // Vamos verificar o que está chegando na prop 'viagem'
-  console.log("[ListaDespesas] Prop 'viagem' recebida:", viagem);
-  // ==================================================
 
   const totalDespesas = despesas.reduce((sum, d) => sum + (d.valor || 0), 0);
   const queryClient = useQueryClient();

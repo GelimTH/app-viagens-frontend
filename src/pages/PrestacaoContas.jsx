@@ -15,25 +15,26 @@ export default function PrestacaoContas() {
 
   const queryClient = useQueryClient();
 
+  // (Query 'todasAsViagens' - sem mudança)
   const { data: todasAsViagens = [] } = useQuery({
     queryKey: ['viagens'],
     queryFn: api.getViagens,
   });
   const viagensAprovadas = todasAsViagens.filter(v => v.status === 'aprovado');
 
+  // (Query 'despesas' - sem mudança)
   const { data: despesas = [], isLoading: isLoadingDespesas } = useQuery({
     queryKey: ['despesas', viagemSelecionada?.id],
     queryFn: () => api.getDespesas(viagemSelecionada.id),
     enabled: !!viagemSelecionada,
   });
 
+  // (Mutation 'createDespesaMutation' - sem mudança)
   const createDespesaMutation = useMutation({
     mutationFn: api.createDespesa,
     onSuccess: () => {
-      // ESTA É A LINHA MÁGICA:
-      // Avisa ao React Query para recarregar a lista de despesas
       queryClient.invalidateQueries({ queryKey: ['despesas', viagemSelecionada.id] });
-      setMostrarFormulario(false); // Fecha o formulário
+      setMostrarFormulario(false);
     },
     onError: (err) => {
       console.error("Erro ao criar despesa:", err);
@@ -44,6 +45,7 @@ export default function PrestacaoContas() {
   return (
     <div className="p-6 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
+        {/* (Header - sem mudança) */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
             <FileText className="w-7 h-7 text-white" />
@@ -66,6 +68,7 @@ export default function PrestacaoContas() {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Missão: {viagemSelecionada.destino}</h2>
+                {/* (Exibição do Solicitante no Header - está correto) */}
                 <div className="flex items-center gap-2 text-slate-600 mt-1">
                   <User className="w-4 h-4" />
                   <span className="font-medium" title="Solicitante da Missão">
@@ -76,8 +79,9 @@ export default function PrestacaoContas() {
                 </div>
               </div>
               <div className="flex gap-2">
+                {/* (Botões - sem mudança) */}
                 <Button variant="outline" onClick={() => { setViagemSelecionada(null); setMostrarFormulario(false); }}>
-                  Trocar Viagem
+                  Trocar Missão
                 </Button>
                 <Button onClick={() => setMostrarFormulario(true)} className="bg-gradient-to-r from-green-600 to-green-700">
                   <Camera className="w-4 h-4 mr-2" />
@@ -87,18 +91,23 @@ export default function PrestacaoContas() {
             </div>
 
             {mostrarFormulario && (
-              // 4. ATUALIZE AS PROPS ENVIADAS PARA O UPLOADNOTA
               <UploadNota
                 viagemId={viagemSelecionada.id}
-                onSalvar={createDespesaMutation.mutateAsync} // Passa a função de mutação
-                carregando={createDespesaMutation.isPending} // Passa o estado de loading
+                onSalvar={createDespesaMutation.mutateAsync} 
+                carregando={createDespesaMutation.isPending} 
                 onCancelar={() => setMostrarFormulario(false)}
                 onSucesso={() => { /* A mutação agora controla o sucesso */ }}
                 isEditMode={false}
               />
             )}
 
-            {isLoadingDespesas ? <p>Carregando despesas...</p> : <ListaDespesas despesas={despesas} />}
+            {/* ================================================== */}
+            {/* CORREÇÃO PRINCIPAL AQUI */}
+            {/* ================================================== */}
+            {/* Precisamos passar a prop 'viagem={viagemSelecionada}' */}
+            {isLoadingDespesas ? <p>Carregando despesas...</p> : 
+              <ListaDespesas despesas={despesas} viagem={viagemSelecionada} />
+            }
           </>
         )}
       </div>
