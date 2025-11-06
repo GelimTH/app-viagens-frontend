@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { statusConfig, formatarMoeda } from "@/lib/utils";
 import ModalConvidar from "../components/historico/ModalConvidar";
 import ModalComunicados from "../components/historico/ModalComunicados";
+import ModalConfirmacao from "../components/shared/ModalConfirmacao";
 
 export default function Historico() {
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -21,6 +22,7 @@ export default function Historico() {
   // Mantendo seu estado original para o modal de convite
   const [modalState, setModalState] = useState({ open: false, viagemId: null });
   const [comunicadoModal, setComunicadoModal] = useState({ open: false, viagemId: null });
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState({ open: false, viagemId: null });
 
   // Busca o usuário atual para permissões
   const { data: user } = useQuery({
@@ -37,16 +39,22 @@ export default function Historico() {
     mutationFn: api.deleteViagem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['viagens'] });
+      setConfirmDeleteModal({ open: false, viagemId: null });
     },
     onError: (error) => {
       console.error("Erro ao deletar viagem:", error);
       alert("Não foi possível deletar a viagem.");
+      setConfirmDeleteModal({ open: false, viagemId: null });
     }
   });
 
   const handleDelete = (viagemId) => {
-    if (window.confirm('Tem certeza que deseja deletar esta viagem? Esta ação não pode ser desfeita.')) {
-      deleteViagemMutation.mutate(viagemId);
+    setConfirmDeleteModal({ open: true, viagemId: viagemId });
+  };
+
+  const handleConfirmDelete = () => {
+    if (confirmDeleteModal.viagemId) {
+      deleteViagemMutation.mutate(confirmDeleteModal.viagemId);
     }
   };
 
@@ -103,7 +111,7 @@ export default function Historico() {
                 <Card key={viagem.id} className="border-0 shadow-xl bg-white hover:shadow-2xl transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <MapPin className="w-5 h-5 text-blue-600" />
@@ -113,7 +121,7 @@ export default function Historico() {
                           </Badge>
                         </div>
                         <p className="text-slate-600 mb-3">{viagem.motivo}</p>
-                        
+
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
                           {/* Solicitante */}
                           {viagem.colaborador && (
@@ -126,7 +134,7 @@ export default function Historico() {
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4" />
                             <span>
-                              {format(new Date(viagem.dataIda), "dd MMM", { locale: ptBR })} - {format(new Date(viagem.dataVolta), "dd MMM yyyy", { locale: ptBR })} 
+                              {format(new Date(viagem.dataIda), "dd MMM", { locale: ptBR })} - {format(new Date(viagem.dataVolta), "dd MMM yyyy", { locale: ptBR })}
                             </span>
                           </div>
                           {/* Valor */}
@@ -138,7 +146,7 @@ export default function Historico() {
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Botões de Ação */}
                       <div className="flex gap-2 w-full sm:w-auto">
                         <Link to={`/app/viagens/editar/${viagem.id}`} className="flex-1 sm:flex-auto">
@@ -157,7 +165,7 @@ export default function Historico() {
                             // CORREÇÃO AQUI
                             // ==================================================
                             onClick={() => setModalState({ open: true, viagemId: viagem.id })}
-                            title="Convidar Visitante" 
+                            title="Convidar Visitante"
                           >
                             <Users className="w-4 h-4" />
                           </Button>
@@ -169,20 +177,20 @@ export default function Historico() {
                             variant="outline"
                             size="sm"
                             className="border-blue-300 text-blue-700 hover:bg-blue-50 flex-1 sm:flex-auto"
-                            onClick={() => setComunicadoModal({ open: true, viagemId: viagem.id })} 
+                            onClick={() => setComunicadoModal({ open: true, viagemId: viagem.id })}
                             title="Comunicados"
                           >
                             <Megaphone className="w-4 h-4" />
-                          </Button> 
+                          </Button>
                         )}
-                        
+
                         {/* Botão Deletar (Sua nova permissão) */}
-                        {canManage && ( 
+                        {canManage && (
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDelete(viagem.id)}
-                            disabled={deleteViagemMutation.isPending} 
+                            disabled={deleteViagemMutation.isPending && confirmDeleteModal.viagemId === viagem.id}
                             className="flex-1 sm:flex-auto"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -208,6 +216,18 @@ export default function Historico() {
         <ModalComunicados
           viagemId={comunicadoModal.viagemId}
           onClose={() => setComunicadoModal({ open: false, viagemId: null })}
+        />
+      )}
+      {confirmDeleteModal.open && (
+        <ModalConfirmacao
+          open={true}
+          onClose={() => setConfirmDeleteModal({ open: false, viagemId: null })}
+          onConfirm={handleConfirmDelete}
+          isLoading={deleteViagemMutation.isPending}
+          title="Confirmar Exclusão"
+          message="Tem certeza que deseja deletar esta missão? Esta ação não pode ser desfeita."
+          confirmText="Sim, Excluir"
+          cancelText="Cancelar"
         />
       )}
     </div>
