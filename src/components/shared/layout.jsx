@@ -65,7 +65,7 @@ function SidebarContent() {
     // --- Menu do Colaborador (e outros) ---
     navigationItems = [
       { title: "Início", to: "/app/dashboard", icon: Home },
-      { title: "Nova Viagem", to: "/app/novaviagem", icon: Plane },
+      { title: "Nova Missão", to: "/app/novaviagem", icon: Plane },
       { title: "Prestação de Contas", to: "/app/prestacaocontas", icon: FileText },
     ];
 
@@ -81,7 +81,7 @@ function SidebarContent() {
       navigationItems.push({ title: "Admin Usuários", to: "/app/admin", icon: Users });
     }
     // ==================================================
-    
+
     navigationItems.push({ title: "Histórico", to: "/app/historico", icon: History });
   }
 

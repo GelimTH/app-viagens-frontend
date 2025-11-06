@@ -48,7 +48,7 @@ export default function Dashboard() {
           <Link to="/app/novaviagem">
             <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-200 text-white">
               <Plus className="w-5 h-5 mr-2" />
-              Nova Viagem
+              Nova Missão
             </Button>
           </Link>
         </div>

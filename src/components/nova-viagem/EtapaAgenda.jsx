@@ -84,7 +84,7 @@ export default function EtapaAgenda({ eventos, setEventos, onVoltar, onAvancar }
             <Card className="border-0 shadow-xl bg-white">
                 <CardHeader className="border-b border-slate-100 pb-4">
                     <CardTitle className="text-xl font-bold text-slate-900">
-                        Itinerário da Viagem (Etapa 2 de 3)
+                        Itinerário da Missão (Etapa 2 de 3)
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
