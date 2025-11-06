@@ -42,7 +42,7 @@ function EtapaTipoMissao({ onSelecionar }) {
         >
           <Map className="w-16 h-16 text-blue-600 mb-4" />
           <h3 className="text-xl font-bold text-slate-900">Missão Nacional</h3>
-          <p className="text-slate-600">Viagens dentro do Brasil.</p>
+          <p className="text-slate-600">Missões dentro do Brasil.</p>
         </button>
 
         {/* Card Missão Internacional */}
@@ -53,7 +53,7 @@ function EtapaTipoMissao({ onSelecionar }) {
         >
           <Globe className="w-16 h-16 text-purple-600 mb-4" />
           <h3 className="text-xl font-bold text-slate-900">Missão Internacional</h3>
-          <p className="text-slate-600">Viagens para o exterior.</p>
+          <p className="text-slate-600">Missões para o exterior.</p>
         </button>
       </CardContent>
     </Card>

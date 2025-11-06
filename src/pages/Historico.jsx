@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, DollarSign, Filter, Edit, Trash2, History, Users, Loader2 } from "lucide-react";
+import { Calendar, MapPin, DollarSign, Filter, Edit, Trash2, History, Users, Loader2, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -98,16 +98,31 @@ export default function Historico() {
                           </Badge>
                         </div>
                         <p className="text-slate-600 mb-3">{viagem.motivo}</p>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
-                          <div className="flex items-center gap-1">
+
+                        {/* ================================================== */}
+                        {/* 3. ATUALIZAÇÃO DA LINHA DE INFO */}
+                        {/* ================================================== */}
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500"> {/* Aumentei o gap para 'gap-x-6' */}
+
+                          {/* NOVO ITEM: USUÁRIO QUE SOLICITOU */}
+                          {viagem.colaborador && (
+                            <div className="flex items-center gap-1.5" title={viagem.colaborador.email}>
+                              <User className="w-4 h-4" />
+                              <span>{viagem.colaborador.fullName}</span>
+                            </div>
+                          )}
+
+                          {/* ITEM EXISTENTE: DATA */}
+                          <div className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4" />
                             <span>
                               {format(new Date(viagem.dataIda), "dd MMM", { locale: ptBR })} - {format(new Date(viagem.dataVolta), "dd MMM yyyy", { locale: ptBR })}
                             </span>
                           </div>
-                          {/* 2. MUDANÇA AQUI: Usando a função `formatarMoeda` */}
+
+                          {/* ITEM EXISTENTE: VALOR */}
                           {viagem.valorEstimado != null && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <DollarSign className="w-4 h-4" />
                               <span>{formatarMoeda(viagem.valorEstimado)}</span>
                             </div>
