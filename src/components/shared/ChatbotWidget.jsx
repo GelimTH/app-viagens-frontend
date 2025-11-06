@@ -1,4 +1,3 @@
-// src/components/shared/ChatbotWidget.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,14 @@ if (typeof window !== 'undefined') {
 // -----------
 
 export default function ChatbotWidget() {
+  // =================================================================
+  //  LOG DE DEPURAÇÃO (COMO VOCÊ SUGERIU) 
+  // =================================================================
+  // Este log vai nos dizer se o navegador está realmente encontrando
+  // a API de reconhecimento de voz.
+  console.log("ChatbotWidget: O microfone está disponível? (micDisponivel)", micDisponivel);
+  // =================================================================
+
   const [isOpen, setIsOpen] = useState(false);
   const [mensagens, setMensagens] = useState([
     {
@@ -89,6 +96,8 @@ export default function ChatbotWidget() {
   // (A função de voz do P5.D)
   const handleListen = () => {
     if (!micDisponivel || isListening) {
+      // Adicionando um log de segurança aqui também
+      console.warn("handleListen chamado, mas mic não está disponível ou já está ouvindo.");
       return;
     }
 
