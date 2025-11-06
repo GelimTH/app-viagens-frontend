@@ -223,9 +223,6 @@ export default function UploadNota({
 
   return (
     <Card className="border-0 shadow-xl bg-white">
-      <CardHeader>
-        {/* ... (mesmo header) ... */}
-      </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSalvar} className="space-y-6">
           

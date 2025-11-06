@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable'; 
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -16,7 +16,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     console.error("Dados da viagem ou sugestões ausentes para o PDF.");
     return;
   }
-  
+
   const doc = new jsPDF();
   let cursorY = 20;
 
@@ -56,7 +56,7 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     doc.setFontSize(12);
     doc.text('Opções de Transporte (Voo)', 14, cursorY);
     cursorY += 7;
-    autoTable(doc, { 
+    autoTable(doc, {
       startY: cursorY,
       head: [['Companhia', 'Horário', 'Status', 'Valor']],
       body: sugestoes.voosSugeridos.map(voo => [
@@ -73,12 +73,12 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     // ==================================================
     cursorY = doc.lastAutoTable.finalY + 10;
   }
-  
+
   if (sugestoes.hoteisSugeridos && sugestoes.hoteisSugeridos.length > 0) {
     doc.setFontSize(12);
     doc.text('Opções de Hospedagem', 14, cursorY);
     cursorY += 7;
-    autoTable(doc, { 
+    autoTable(doc, {
       startY: cursorY,
       head: [['Hotel', 'Estrelas', 'Status', 'Valor']],
       body: sugestoes.hoteisSugeridos.map(hotel => [
@@ -95,6 +95,26 @@ export const gerarPDFExecutivo = (dadosViagem, sugestoes) => {
     // ==================================================
     cursorY = doc.lastAutoTable.finalY + 10;
   }
+
+  // ==================================================
+  // NOVA SEÇÃO DE TRANSFER (COMO SEU IRMÃO PEDIU)
+  // ==================================================
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Opções de Transfer', 14, cursorY);
+  cursorY += 7;
+
+  // Adiciona a mensagem em itálico e cinza
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(10);
+  doc.setTextColor(128, 128, 128); // Cor cinza
+  doc.text('não foram encontradas opções de transporte para a data em questão', 14, cursorY);
+
+  // Reseta a fonte para o rodapé
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0);
+  cursorY += 15;
+  // ==================================================
 
   const pageCount = doc.internal.getNumberOfPages();
   doc.setFontSize(8);
