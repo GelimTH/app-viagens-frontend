@@ -92,8 +92,8 @@ export default function EditarViagem() {
             <Edit className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Editar Viagem</h1>
-            <p className="text-slate-600">Altere os detalhes da sua viagem para {viagem.destino}.</p>
+            <h1 className="text-3xl font-bold text-slate-900">Editar Missão</h1>
+            <p className="text-slate-600">Altere os detalhes da sua missão para {viagem.destino}.</p>
           </div>
         </div>
 

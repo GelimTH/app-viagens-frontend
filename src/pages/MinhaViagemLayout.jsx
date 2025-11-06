@@ -31,7 +31,7 @@ export default function MinhaViagemLayout() {
     return (
       <div className="p-8 flex items-center justify-center gap-2 text-slate-600">
         <Loader2 className="w-5 h-5 animate-spin" />
-        Carregando dados da sua viagem...
+        Carregando dados da sua missão...
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function MinhaViagemLayout() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Meu Itinerário</h1>
-          <p className="text-slate-600">Resumo completo da sua viagem para {dadosViagem.viagem.destino}.</p>
+          <p className="text-slate-600">Resumo completo da sua missão para {dadosViagem.viagem.destino}.</p>
         </div>
       </div>
 

@@ -165,7 +165,7 @@ export default function MinhaViagem() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Meu Itinerário</h1>
-          <p className="text-slate-600">Aqui está o cronograma da sua viagem.</p>
+          <p className="text-slate-600">Aqui está o cronograma da sua missão.</p>
         </div>
       </div>
       

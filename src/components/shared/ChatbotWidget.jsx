@@ -1,3 +1,4 @@
+// src/components/shared/ChatbotWidget.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, X, Send, User, Mic, Loader2 } from 'lucide-react';
 import { api } from '@/api/apiClient';
 
-// --- VOZ ---
+// --- VOZ (CORREÇÃO) ---
 // Versão mais segura da verificação
 let SpeechRecognition;
 let micDisponivel = false;
@@ -21,7 +22,7 @@ export default function ChatbotWidget() {
   const [mensagens, setMensagens] = useState([
     {
       tipo: "bot",
-      texto: "Olá! 👋 Sou seu assistente de viagens. Como posso ajudar com suas solicitações ou dúvidas? Clique no microfone para falar."
+      texto: "Olá! 👋 Sou seu assistente de viagens. Como posso ajudar? Clique no microfone para falar."
     }
   ]);
   const [inputMensagem, setInputMensagem] = useState("");
@@ -51,6 +52,7 @@ export default function ChatbotWidget() {
     setCarregando(true);
 
     try {
+      // (A API do P4.B)
       const [respostaDoBot] = await Promise.all([
         api.askChatbot({ pergunta: textoPergunta }),
         new Promise(resolve => setTimeout(resolve, 750))
@@ -84,6 +86,7 @@ export default function ChatbotWidget() {
     }
   };
   
+  // (A função de voz do P5.D)
   const handleListen = () => {
     if (!micDisponivel || isListening) {
       return;
@@ -149,6 +152,7 @@ export default function ChatbotWidget() {
                   </CardTitle>
               </CardHeader>
               <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+                  {/* ... (Renderização de mensagens - sem mudança) ... */}
                   <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
                       {mensagens.map((msg, idx) => (
                           <div key={idx} className={`flex gap-3 text-sm ${msg.tipo === "usuario" ? "justify-end" : "justify-start"}`}>
@@ -168,16 +172,18 @@ export default function ChatbotWidget() {
                       <div ref={mensagensEndRef} />
                   </div>
 
+                  {/* --- ÁREA DE INPUT --- */}
                   <div className="flex gap-2 border-t pt-4">
                     <Input 
                       value={inputMensagem} 
                       onChange={(e) => setInputMensagem(e.target.value)} 
-                      onKeyPress={(e) => e.key === 'Enter' && handleEnviar()} 
+                      onKeyPress={(e) => e.key === 'Enter' && !isListening && handleEnviar()} 
                       placeholder={isListening ? "Ouvindo..." : "Digite sua mensagem..."} 
                       className="flex-1" 
                       disabled={carregando || isListening} 
                     />
                     
+                    {/* Botão de Microfone (agora deve aparecer) */}
                     {micDisponivel && (
                       <Button 
                         onClick={handleListen} 

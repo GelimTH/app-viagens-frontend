@@ -51,7 +51,7 @@ function SidebarContent() {
   if (role === 'VISITANTE') {
     // --- Menu do Visitante ---
     navigationItems = [
-      { title: "Minha Viagem", to: "/app/minha-viagem", icon: Plane },
+      { title: "Minha Missão", to: "/app/minha-viagem", icon: Plane },
       // (Links baseados na sua descrição)
       { title: "Itinerário", to: "/app/minha-viagem/itinerario", icon: BookOpen },
       { title: "Hotel", to: "/app/minha-viagem/hotel", icon: Hotel },
