@@ -1,189 +1,181 @@
-import React, { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { Map, Calendar, DollarSign, LogOut, MessageCircle, Home } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/api/apiClient";
-import ModalTermos from "@/components/minha-viagem/ModalTermos"; // Novo componente
+// src/pages/MinhaViagemLayout.jsx
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/api/apiClient';
+import { Plane, Loader2, AlertCircle, MessageCircle } from 'lucide-react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import ModalTermos from "@/components/minha-viagem/ModalTermos";
+
+// As Abas
+const tabs = [
+  { name: 'Visão Geral', to: '.' },
+  { name: 'Itinerário', to: './itinerario' },
+  { name: 'Hotel', to: './hotel' },
+  { name: 'Comunicados', to: './comunicados' },
+];
 
 export default function MinhaViagemLayout() {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const navigate = useNavigate(); // Faltava inicializar isso
   const queryClient = useQueryClient();
   const [termosPendentes, setTermosPendentes] = useState(false);
 
-  // Busca dados da viagem ("Minha Viagem")
-  const { data: dadosViagem, isLoading } = useQuery({
+  // Busca os dados da viagem
+  const {
+    data: dadosViagem,
+    isLoading: isLoadingViagem,
+    error: errorViagem
+  } = useQuery({
     queryKey: ['minhaViagem'],
     queryFn: api.getMinhaViagem,
     retry: 1,
-    onError: () => {
-      // Se der erro (ex: não logado), redireciona
-      navigate('/');
-    }
+    refetchOnWindowFocus: false,
   });
 
   // Efeito para verificar se os termos foram aceitos
   useEffect(() => {
     if (dadosViagem?.perfil) {
-      // Se termosAceitos for false, o modal deve aparecer
-      // Se o campo não existir (null/undefined), assume false para segurança
+      // Se termosAceitos for false (ou null), marca como pendente
       const aceitou = dadosViagem.perfil.termosAceitos === true;
       setTermosPendentes(!aceitou);
     }
   }, [dadosViagem]);
 
-  // Ação ao aceitar os termos no Modal
   const handleTermosAceitos = () => {
     setTermosPendentes(false);
-    queryClient.invalidateQueries(['minhaViagem']); // Atualiza os dados para confirmar o status no cache
+    queryClient.invalidateQueries(['minhaViagem']); // Atualiza cache
   };
 
-  // Logout
   const handleLogout = () => {
     api.logout();
     navigate('/');
   };
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  // Lógica do Link do WhatsApp (Tarefa 4)
-  // Pega o telefone do gestor vindo da API e remove caracteres não numéricos
+  // Lógica do botão de WhatsApp (Tarefa 4)
   const gestorTelefone = dadosViagem?.gestor?.profile?.telefone;
   const whatsappLink = gestorTelefone 
     ? `https://wa.me/55${gestorTelefone.replace(/\D/g, '')}` 
     : null;
 
+  // --- RENDER ---
+  if (isLoadingViagem) {
+    return (
+      <div className="h-screen flex items-center justify-center gap-2 text-slate-600 bg-slate-50">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <span className="font-medium">Carregando dados da sua missão...</span>
+      </div>
+    );
+  }
+
+  if (errorViagem) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-red-600 gap-4 bg-slate-50 p-6">
+        <div className="bg-red-100 p-4 rounded-full">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <p className="text-lg font-medium">
+          {errorViagem.response?.data?.error || "Erro ao buscar sua viagem."}
+        </p>
+        <button 
+          onClick={handleLogout}
+          className="text-sm text-slate-500 underline hover:text-slate-800"
+        >
+          Voltar para o login
+        </button>
+      </div>
+    );
+  }
+
+  if (!dadosViagem || !dadosViagem.viagem) {
+    return (
+      <div className="p-8 text-center text-slate-500 h-screen flex flex-col justify-center items-center">
+        <p>Nenhuma viagem encontrada para você.</p>
+        <button onClick={handleLogout} className="mt-4 text-blue-600 hover:underline">Sair</button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 p-6 md:p-8 relative">
       
       {/* --- MODAL DE TERMOS (TAREFA 2) --- */}
-      {/* Aparece sobre tudo se os termos estiverem pendentes */}
       <ModalTermos 
         open={termosPendentes} 
         onAceitar={handleTermosAceitos}
         onLogout={handleLogout}
-        dadosUsuario={{ 
-          fullName: dadosViagem?.perfil?.fullName, // Ajuste conforme seu retorno da API
-          ...dadosViagem?.perfil 
-        }}
+        dadosUsuario={dadosViagem?.perfil}
         dadosViagem={dadosViagem?.viagem}
       />
 
-      {/* Sidebar de Navegação */}
-      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
-        <div className="p-6 border-b border-slate-100">
-          <h1 className="text-xl font-bold text-slate-800">Minha Viagem</h1>
-          <p className="text-sm text-slate-500 mt-1 truncate">
-            {dadosViagem?.viagem?.destino || 'Carregando...'}
-          </p>
+      {/* Header */}
+      <div className="max-w-7xl mx-auto flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+            <Plane className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Meu Itinerário</h1>
+            <p className="text-slate-500">
+              Resumo da missão para <span className="font-semibold text-blue-600">{dadosViagem.viagem.destino}</span>.
+            </p>
+          </div>
         </div>
+        
+        {/* Botão Sair (Desktop) */}
+        <button 
+          onClick={handleLogout}
+          className="hidden md:block text-sm font-medium text-slate-500 hover:text-red-600 transition-colors"
+        >
+          Sair do Sistema
+        </button>
+      </div>
 
-        <nav className="flex-1 p-4 space-y-2">
-          <NavLink 
-            to="/minha-viagem" 
-            end
-            className={({ isActive }) => 
-              `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive 
-                  ? "bg-blue-50 text-blue-700" 
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`
-            }
-          >
-            <Home className="w-5 h-5" />
-            Visão Geral
-          </NavLink>
-          
-          <NavLink 
-            to="/minha-viagem/itinerario" 
-            className={({ isActive }) => 
-              `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive 
-                  ? "bg-blue-50 text-blue-700" 
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`
-            }
-          >
-            <Calendar className="w-5 h-5" />
-            Itinerário
-          </NavLink>
+      {/* Navegação por Abas (Tabs) */}
+      <div className="max-w-7xl mx-auto border-b border-slate-200 mb-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+          {tabs.map((tab) => {
+            // Lógica de rota ativa
+            const isActive = location.pathname.endsWith(tab.to) || (tab.to === '.' && location.pathname.endsWith('/minha-viagem'));
 
-          <NavLink 
-            to="/minha-viagem/financeiro" 
-            className={({ isActive }) => 
-              `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive 
-                  ? "bg-blue-50 text-blue-700" 
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`
-            }
-          >
-            <DollarSign className="w-5 h-5" />
-            Financeiro
-          </NavLink>
+            return (
+              <NavLink
+                key={tab.name}
+                to={tab.to}
+                end={tab.to === '.'}
+                className={`
+                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${isActive
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
+                `}
+              >
+                {tab.name}
+              </NavLink>
+            );
+          })}
         </nav>
+      </div>
 
-        <div className="p-4 border-t border-slate-100">
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Sair
-          </button>
-        </div>
-      </aside>
+      {/* Conteúdo da Aba */}
+      <div className="max-w-7xl mx-auto pb-20">
+        <Outlet context={{ dadosViagem }} />
+      </div>
 
-      {/* Conteúdo Principal */}
-      <main className="flex-1 overflow-auto relative">
-        {/* Header Mobile */}
-        <div className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-20">
-          <span className="font-bold text-slate-800">Minha Viagem</span>
-          <button onClick={handleLogout} className="text-slate-500">
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Renderiza as sub-rotas */}
-        <div className="p-4 md:p-8 max-w-5xl mx-auto pb-24"> {/* pb-24 para dar espaço ao botão flutuante no mobile */}
-          <Outlet context={{ dadosViagem }} />
-        </div>
-
-        {/* --- BOTÃO FLUTUANTE WHATSAPP (TAREFA 4) --- */}
-        {/* Só aparece se tiver link e se os termos já tiverem sido aceitos */}
-        {whatsappLink && !termosPendentes && (
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 z-50 flex items-center gap-2 group"
-            title="Falar com o Organizador"
-          >
-            <MessageCircle className="w-6 h-6" />
-            <span className="font-semibold hidden group-hover:inline-block transition-all duration-300 whitespace-nowrap overflow-hidden max-w-0 group-hover:max-w-xs">
-              Falar com Organizador
-            </span>
-          </a>
-        )}
-
-        {/* Menu Inferior Mobile */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-3 flex justify-between z-40">
-          <NavLink to="/minha-viagem" end className={({ isActive }) => isActive ? "text-blue-600" : "text-slate-400"}>
-            <Home className="w-6 h-6" />
-          </NavLink>
-          <NavLink to="/minha-viagem/itinerario" className={({ isActive }) => isActive ? "text-blue-600" : "text-slate-400"}>
-            <Calendar className="w-6 h-6" />
-          </NavLink>
-          <NavLink to="/minha-viagem/financeiro" className={({ isActive }) => isActive ? "text-blue-600" : "text-slate-400"}>
-            <DollarSign className="w-6 h-6" />
-          </NavLink>
-        </div>
-      </main>
+      {/* Botão Flutuante WhatsApp (Tarefa 4) */}
+      {whatsappLink && !termosPendentes && (
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 z-40 flex items-center gap-2 group"
+          title="Falar com o Organizador"
+        >
+          <MessageCircle className="w-6 h-6" />
+          <span className="font-semibold hidden md:inline max-w-0 md:group-hover:max-w-xs overflow-hidden transition-all duration-300">
+            Falar com Organizador
+          </span>
+        </a>
+      )}
     </div>
   );
 }
