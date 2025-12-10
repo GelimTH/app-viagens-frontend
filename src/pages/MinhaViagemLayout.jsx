@@ -2,10 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Plane, Loader2, AlertCircle, MessageCircle, LogOut, Home, Calendar, DollarSign, Megaphone } from 'lucide-react';
+import { Plane, Loader2, AlertCircle, MessageCircle, LogOut } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import ModalTermos from "@/components/minha-viagem/ModalTermos";
-import { Button } from '@/components/ui/button'; // Importando botão
+
+// As Abas de Navegação
+const tabs = [
+  { name: 'Visão Geral', to: '.' },
+  { name: 'Itinerário', to: './itinerario' },
+  { name: 'Hotel', to: './hotel' },
+  { name: 'Comunicados', to: './comunicados' },
+];
 
 export default function MinhaViagemLayout() {
   const location = useLocation();
@@ -25,6 +33,7 @@ export default function MinhaViagemLayout() {
     refetchOnWindowFocus: false,
   });
 
+  // Verifica aceite dos termos
   useEffect(() => {
     if (dadosViagem?.perfil) {
       const aceitou = dadosViagem.perfil.termosAceitos === true;
@@ -42,15 +51,12 @@ export default function MinhaViagemLayout() {
     navigate('/');
   };
 
-  // --- LÓGICA DO WHATSAPP (FAKE) ---
-  // Link estático para a Sprint
-  const whatsappLink = "https://wa.me/5511999999999"; 
-
+  // --- RENDERIZACAO ---
   if (isLoadingViagem) {
     return (
       <div className="h-screen flex items-center justify-center gap-2 text-slate-600 bg-slate-50">
         <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-        <span className="font-medium">Carregando...</span>
+        <span className="font-medium">Carregando dados da sua missão...</span>
       </div>
     );
   }
@@ -68,11 +74,13 @@ export default function MinhaViagemLayout() {
   if (!dadosViagem?.viagem) return null;
 
   const gestorNome = dadosViagem.gestor?.fullName || 'Organização';
+  // Link FAKE estático solicitado para a Sprint
+  const whatsappFakeLink = "https://wa.me/5511999999999"; 
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       
-      {/* Modal de Termos */}
+      {/* Modal de Bloqueio (Termos) */}
       <ModalTermos 
         open={termosPendentes} 
         onAceitar={handleTermosAceitos}
@@ -81,115 +89,81 @@ export default function MinhaViagemLayout() {
         dadosViagem={dadosViagem?.viagem}
       />
 
-      {/* --- SIDEBAR (Barra Lateral Esquerda) --- */}
-      <aside className="w-72 bg-white border-r border-slate-200 hidden md:flex flex-col z-10 shadow-sm">
+      {/* --- CABEÇALHO (Top Header) --- */}
+      <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         
-        {/* Cabeçalho da Sidebar */}
-        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Plane className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-slate-800 text-lg">Minha Viagem</span>
+        {/* Lado Esquerdo: Ícone e Título */}
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <Plane className="w-7 h-7 text-white" />
           </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Meu Itinerário</h1>
+            <p className="text-slate-500">
+              Missão para <span className="font-semibold text-emerald-600">{dadosViagem.viagem.destino}</span>
+            </p>
+          </div>
+        </div>
 
-          {/* Destino */}
-          <h2 className="text-xl font-bold text-slate-900 leading-tight">
-            {dadosViagem.viagem.destino}
-          </h2>
-
-          {/* INFORMAÇÃO DO GESTOR + BOTÃO WHATSAPP (AQUI!) */}
-          <div className="mt-4 pt-4 border-t border-slate-200">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">
+        {/* Lado Direito: GESTOR + BOTÃO FAKE (Aqui está o que você pediu) */}
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 md:min-w-[300px]">
+          <div className="flex-1">
+            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">
               Organizada por:
             </p>
-            <p className="text-sm font-medium text-slate-800 mb-3 truncate" title={gestorNome}>
+            <p className="text-sm font-bold text-slate-800 truncate" title={gestorNome}>
               {gestorNome}
             </p>
-            
-            {/* Botão Fixo FAKE */}
-            <a 
-              href={whatsappLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full border-green-200 text-green-700 bg-green-50 hover:bg-green-100 hover:text-green-800 flex items-center justify-center gap-2 text-xs h-9"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                Falar com Gestor
-              </Button>
-            </a>
           </div>
-        </div>
-
-        {/* Menu de Navegação */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <NavLink to="/minha-viagem" end className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"}`}>
-            <Home className="w-5 h-5" /> Visão Geral
-          </NavLink>
-          <NavLink to="/minha-viagem/itinerario" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"}`}>
-            <Calendar className="w-5 h-5" /> Itinerário
-          </NavLink>
-          <NavLink to="/minha-viagem/comunicados" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"}`}>
-            <Megaphone className="w-5 h-5" /> Comunicados
-          </NavLink>
-        </nav>
-
-        {/* Rodapé Sidebar */}
-        <div className="p-4 border-t border-slate-100">
-          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
-            <LogOut className="w-5 h-5" /> Sair
-          </button>
-        </div>
-      </aside>
-
-      {/* --- CONTEÚDO PRINCIPAL --- */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
-        {/* Header Mobile (Só aparece em telas pequenas) */}
-        <div className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between shadow-sm z-20">
-          <div className="flex items-center gap-2">
-            <Plane className="w-5 h-5 text-blue-600" />
-            <span className="font-bold text-slate-800 truncate max-w-[150px]">{dadosViagem.viagem.destino}</span>
-          </div>
-          <button onClick={handleLogout} className="text-slate-500 hover:text-red-600">
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Área de Conteúdo Scrollável */}
-        <div className="flex-1 overflow-auto p-4 md:p-8 pb-24 md:pb-8">
-          <Outlet context={{ dadosViagem }} />
           
-          {/* Fallback Mobile: Botão do Gestor aparece no rodapé do conteúdo se for mobile */}
-          <div className="md:hidden mt-8 pt-6 border-t border-slate-200 text-center">
-            <p className="text-xs text-slate-500 uppercase mb-2">Organizada por: {gestorNome}</p>
-            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="w-full border-green-200 text-green-700">
-                <MessageCircle className="w-4 h-4 mr-2" /> Falar com Gestor
-              </Button>
-            </a>
-          </div>
+          <a href={whatsappFakeLink} target="_blank" rel="noopener noreferrer">
+            <Button 
+              size="sm" 
+              className="bg-green-600 hover:bg-green-700 text-white shadow-green-200 shadow-md h-9 px-3"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Falar
+            </Button>
+          </a>
         </div>
+      </div>
 
-        {/* Menu Inferior Mobile (Tab Bar) */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-3 flex justify-between z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <NavLink to="/minha-viagem" end className={({ isActive }) => isActive ? "text-blue-600" : "text-slate-400"}>
-            <Home className="w-6 h-6" />
-          </NavLink>
-          <NavLink to="/minha-viagem/itinerario" className={({ isActive }) => isActive ? "text-blue-600" : "text-slate-400"}>
-            <Calendar className="w-6 h-6" />
-          </NavLink>
-          <NavLink to="/minha-viagem/comunicados" className={({ isActive }) => isActive ? "text-blue-600" : "text-slate-400"}>
-            <Megaphone className="w-6 h-6" />
-          </NavLink>
-        </div>
+      {/* --- MENU DE ABAS (Tabs) --- */}
+      <div className="max-w-7xl mx-auto border-b border-slate-200 mb-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+          {tabs.map((tab) => {
+            const isActive = location.pathname.endsWith(tab.to) || (tab.to === '.' && location.pathname.endsWith('/minha-viagem'));
+            return (
+              <NavLink
+                key={tab.name}
+                to={tab.to}
+                end={tab.to === '.'}
+                className={`
+                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${isActive
+                    ? 'border-green-600 text-green-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
+                `}
+              >
+                {tab.name}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
 
-      </main>
+      {/* Botão Sair (Mobile/Desktop) */}
+      <div className="absolute top-4 right-4 md:hidden">
+         <button onClick={handleLogout} className="text-slate-400 hover:text-red-500">
+           <LogOut className="w-5 h-5" />
+         </button>
+      </div>
+
+      {/* --- CONTEÚDO DA PÁGINA --- */}
+      <div className="max-w-7xl mx-auto pb-20">
+        <Outlet context={{ dadosViagem }} />
+      </div>
+      
     </div>
   );
 }
