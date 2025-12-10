@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import { Plane, Loader2, AlertCircle, MessageCircle } from 'lucide-react';
+import { Plane, Loader2, AlertCircle } from 'lucide-react'; // Removi MessageCircle
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import ModalTermos from "@/components/minha-viagem/ModalTermos";
 
@@ -49,14 +49,6 @@ export default function MinhaViagemLayout() {
     api.logout();
     navigate('/');
   };
-
-  // --- LÓGICA DO WHATSAPP (MODIFICADA PARA SPRINT) ---
-  // Tenta pegar o telefone do gestor do banco.
-  // SE NÃO TIVER, usa um número FAKE para o botão aparecer na tela.
-  const telefoneReal = dadosViagem?.gestor?.profile?.telefone;
-  const telefoneParaLink = telefoneReal || "11999999999"; // <--- NÚMERO FAKE AQUI
-
-  const whatsappLink = `https://wa.me/55${telefoneParaLink.replace(/\D/g, '')}`;
 
   // --- RENDER ---
   if (isLoadingViagem) {
@@ -158,23 +150,6 @@ export default function MinhaViagemLayout() {
       <div className="max-w-7xl mx-auto pb-20">
         <Outlet context={{ dadosViagem }} />
       </div>
-
-      {/* --- BOTÃO FLUTUANTE WHATSAPP (TAREFA 4) --- */}
-      {/* Agora aparece sempre que os termos estiverem ok, pois temos um número fake de fallback */}
-      {!termosPendentes && (
-        <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 z-40 flex items-center gap-2 group cursor-pointer"
-          title="Falar com o Organizador"
-        >
-          <MessageCircle className="w-6 h-6" />
-          <span className="font-semibold hidden md:inline max-w-0 md:group-hover:max-w-xs overflow-hidden transition-all duration-300">
-            Falar com Organizador
-          </span>
-        </a>
-      )}
     </div>
   );
 }
