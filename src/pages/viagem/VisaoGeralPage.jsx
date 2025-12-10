@@ -5,14 +5,13 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, MapPin, User, MessageCircle, Megaphone, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TimelineItem from '@/components/minha-viagem/TimelineItem'; 
+import TimelineItem from '@/components/minha-viagem/TimelineItem';
 
-// --- 1. COMPONENTE INTERNO: RESUMO VIAGEM (Aqui dentro para não dar erro de arquivo faltando) ---
-function ResumoViagem({ viagem, gestor }) {
-  // Lógica do Telefone (Real ou Fake para Sprint)
-  const telefoneReal = gestor?.profile?.telefone;
-  const telefoneParaLink = telefoneReal || "11999999999"; 
-  const whatsappLink = `https://wa.me/55${telefoneParaLink.replace(/\D/g, '')}`;
+// --- COMPONENTE INTERNO (Para não dar erro de importação) ---
+function ResumoViagemInterno({ viagem, gestor }) {
+  
+  // Link FAKE estático (sempre aponta para esse número, ou coloque '#' para não fazer nada)
+  const whatsappLink = "https://wa.me/5511999999999"; 
 
   return (
     <Card className="border-0 shadow-md bg-white h-full">
@@ -51,28 +50,28 @@ function ResumoViagem({ viagem, gestor }) {
 
         <div className="border-t border-slate-100 my-4"></div>
 
-        {/* Organizador e Botão WhatsApp */}
+        {/* Organizador + Botão FAKE Integrado */}
         <div className="flex items-start gap-3">
           <div className="bg-slate-100 p-2 rounded-full text-slate-600 mt-1">
             <User className="w-5 h-5" />
           </div>
           <div className="w-full">
             <p className="text-sm font-medium text-slate-500">Organizada por:</p>
-            <p className="text-slate-800 font-bold text-sm md:text-base">
+            <p className="text-slate-800 font-bold text-sm md:text-base mb-2">
               {gestor?.fullName || 'Equipe Administrativa'}
             </p>
             
-            {/* Botão de WhatsApp Integrado */}
+            {/* BOTÃO FAKE - SEMPRE VISÍVEL */}
             <a 
               href={whatsappLink} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="mt-3 block w-full"
+              className="block w-full"
             >
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 flex items-center justify-center gap-2 transition-all"
+                className="w-full border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 Conversar com Gestor
@@ -80,12 +79,13 @@ function ResumoViagem({ viagem, gestor }) {
             </a>
           </div>
         </div>
+
       </CardContent>
     </Card>
   );
 }
 
-// --- 2. PÁGINA PRINCIPAL: VISÃO GERAL ---
+// --- PÁGINA PRINCIPAL ---
 export default function VisaoGeralPage() {
   const { dadosViagem } = useOutletContext();
 
@@ -104,7 +104,7 @@ export default function VisaoGeralPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
       
-      {/* Coluna da Esquerda: Timeline */}
+      {/* Coluna Esquerda: Timeline */}
       <div className="lg:col-span-2 space-y-6">
         <Card className="border-0 shadow-md bg-white">
           <CardHeader>
@@ -131,13 +131,13 @@ export default function VisaoGeralPage() {
         </Card>
       </div>
 
-      {/* Coluna da Direita: Resumo e Comunicados */}
+      {/* Coluna Direita: Resumo (com botão fake) e Avisos */}
       <div className="lg:col-span-1 space-y-6">
         
-        {/* USANDO O COMPONENTE INTERNO (Sem Import) */}
-        <ResumoViagem viagem={viagem} gestor={gestor} />
+        {/* Chamando o componente interno */}
+        <ResumoViagemInterno viagem={viagem} gestor={gestor} />
 
-        {/* Card de Comunicados */}
+        {/* Card Avisos */}
         <Card className="border-0 shadow-md bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
