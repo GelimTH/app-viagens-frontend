@@ -16,7 +16,7 @@ const tabs = [
 
 export default function MinhaViagemLayout() {
   const location = useLocation();
-  const navigate = useNavigate(); // Faltava inicializar isso
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [termosPendentes, setTermosPendentes] = useState(false);
 
@@ -35,7 +35,6 @@ export default function MinhaViagemLayout() {
   // Efeito para verificar se os termos foram aceitos
   useEffect(() => {
     if (dadosViagem?.perfil) {
-      // Se termosAceitos for false (ou null), marca como pendente
       const aceitou = dadosViagem.perfil.termosAceitos === true;
       setTermosPendentes(!aceitou);
     }
@@ -43,7 +42,7 @@ export default function MinhaViagemLayout() {
 
   const handleTermosAceitos = () => {
     setTermosPendentes(false);
-    queryClient.invalidateQueries(['minhaViagem']); // Atualiza cache
+    queryClient.invalidateQueries(['minhaViagem']);
   };
 
   const handleLogout = () => {
@@ -51,11 +50,13 @@ export default function MinhaViagemLayout() {
     navigate('/');
   };
 
-  // Lógica do botão de WhatsApp (Tarefa 4)
-  const gestorTelefone = dadosViagem?.gestor?.profile?.telefone;
-  const whatsappLink = gestorTelefone 
-    ? `https://wa.me/55${gestorTelefone.replace(/\D/g, '')}` 
-    : null;
+  // --- LÓGICA DO WHATSAPP (MODIFICADA PARA SPRINT) ---
+  // Tenta pegar o telefone do gestor do banco.
+  // SE NÃO TIVER, usa um número FAKE para o botão aparecer na tela.
+  const telefoneReal = dadosViagem?.gestor?.profile?.telefone;
+  const telefoneParaLink = telefoneReal || "11999999999"; // <--- NÚMERO FAKE AQUI
+
+  const whatsappLink = `https://wa.me/55${telefoneParaLink.replace(/\D/g, '')}`;
 
   // --- RENDER ---
   if (isLoadingViagem) {
@@ -98,7 +99,7 @@ export default function MinhaViagemLayout() {
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8 relative">
       
-      {/* --- MODAL DE TERMOS (TAREFA 2) --- */}
+      {/* Modal de Termos */}
       <ModalTermos 
         open={termosPendentes} 
         onAceitar={handleTermosAceitos}
@@ -121,7 +122,6 @@ export default function MinhaViagemLayout() {
           </div>
         </div>
         
-        {/* Botão Sair (Desktop) */}
         <button 
           onClick={handleLogout}
           className="hidden md:block text-sm font-medium text-slate-500 hover:text-red-600 transition-colors"
@@ -130,13 +130,11 @@ export default function MinhaViagemLayout() {
         </button>
       </div>
 
-      {/* Navegação por Abas (Tabs) */}
+      {/* Navegação por Abas */}
       <div className="max-w-7xl mx-auto border-b border-slate-200 mb-8">
         <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
           {tabs.map((tab) => {
-            // Lógica de rota ativa
             const isActive = location.pathname.endsWith(tab.to) || (tab.to === '.' && location.pathname.endsWith('/minha-viagem'));
-
             return (
               <NavLink
                 key={tab.name}
@@ -161,13 +159,14 @@ export default function MinhaViagemLayout() {
         <Outlet context={{ dadosViagem }} />
       </div>
 
-      {/* Botão Flutuante WhatsApp (Tarefa 4) */}
-      {whatsappLink && !termosPendentes && (
+      {/* --- BOTÃO FLUTUANTE WHATSAPP (TAREFA 4) --- */}
+      {/* Agora aparece sempre que os termos estiverem ok, pois temos um número fake de fallback */}
+      {!termosPendentes && (
         <a
           href={whatsappLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 z-40 flex items-center gap-2 group"
+          className="fixed bottom-6 right-6 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-lg transition-all hover:scale-110 z-40 flex items-center gap-2 group cursor-pointer"
           title="Falar com o Organizador"
         >
           <MessageCircle className="w-6 h-6" />

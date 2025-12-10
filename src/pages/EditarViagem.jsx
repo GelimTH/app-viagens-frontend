@@ -58,7 +58,7 @@ export default function EditarViagem() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/app/dashboard')}
             className="hover:bg-white"
           >
             <ArrowLeft className="w-5 h-5 text-slate-600" />
