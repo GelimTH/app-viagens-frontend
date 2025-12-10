@@ -1,18 +1,92 @@
-// src/pages/minha-viagem/VisaoGeralPage.jsx
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Megaphone } from 'lucide-react';
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Calendar, MapPin, User, MessageCircle, Megaphone, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import TimelineItem from '@/components/minha-viagem/TimelineItem'; // Certifique-se que este existe
 
-// Importa os componentes filhos
-// (Certifique-se que o caminho está correto conforme seu projeto)
-import TimelineItem from '@/components/minha-viagem/TimelineItem'; 
-import ResumoViagem from '@/components/minha-viagem/ResumoViagem'; // <--- O componente novo com botão corrigido
+// --- COMPONENTE INTERNO: RESUMO VIAGEM (Com botão WhatsApp corrigido) ---
+function ResumoViagem({ viagem, gestor }) {
+  // Lógica do Telefone (Real ou Fake para Sprint)
+  const telefoneReal = gestor?.profile?.telefone;
+  const telefoneParaLink = telefoneReal || "11999999999"; 
+  const whatsappLink = `https://wa.me/55${telefoneParaLink.replace(/\D/g, '')}`;
 
+  return (
+    <Card className="border-0 shadow-md bg-white h-full">
+      <CardHeader>
+        <CardTitle className="text-lg font-bold text-slate-800">
+          Detalhes da Missão
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        
+        {/* Datas */}
+        <div className="flex items-start gap-3">
+          <div className="bg-blue-50 p-2 rounded-lg text-blue-600 mt-1">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Período</p>
+            <p className="text-slate-800 font-semibold">
+              {viagem?.dataIda && format(new Date(viagem.dataIda), "dd 'de' MMM", { locale: ptBR })} 
+              {' até '}
+              {viagem?.dataVolta && format(new Date(viagem.dataVolta), "dd 'de' MMM", { locale: ptBR })}
+            </p>
+          </div>
+        </div>
+
+        {/* Destino */}
+        <div className="flex items-start gap-3">
+          <div className="bg-purple-50 p-2 rounded-lg text-purple-600 mt-1">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Destino</p>
+            <p className="text-slate-800 font-semibold">{viagem?.destino}</p>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-100 my-4"></div>
+
+        {/* Organizador e Botão WhatsApp */}
+        <div className="flex items-start gap-3">
+          <div className="bg-slate-100 p-2 rounded-full text-slate-600 mt-1">
+            <User className="w-5 h-5" />
+          </div>
+          <div className="w-full">
+            <p className="text-sm font-medium text-slate-500">Organizada por:</p>
+            <p className="text-slate-800 font-bold text-sm md:text-base">
+              {gestor?.fullName || 'Equipe Administrativa'}
+            </p>
+            
+            {/* Botão de WhatsApp Integrado */}
+            <a 
+              href={whatsappLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-3 block w-full"
+            >
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 flex items-center justify-center gap-2 transition-all"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Conversar com Gestor
+              </Button>
+            </a>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- PÁGINA PRINCIPAL: VISÃO GERAL ---
 export default function VisaoGeralPage() {
-  // Pega os dados vindos do Layout Pai (MinhaViagemLayout)
   const { dadosViagem } = useOutletContext();
 
   if (!dadosViagem) {
@@ -44,14 +118,12 @@ export default function VisaoGeralPage() {
                 Nenhum evento de itinerário cadastrado ainda.
               </p>
             ) : (
-              // Mostra apenas os próximos 3 eventos ou todos, conforme sua preferência
               timeline.map((evento, index) => (
                 <TimelineItem
                   key={evento.id}
                   evento={evento}
                   isPrimeiro={index === 0}
                   isUltimo={index === timeline.length - 1}
-                  // onAddDespesa={() => {}} // Descomente se precisar da ação
                 />
               ))
             )}
@@ -62,10 +134,10 @@ export default function VisaoGeralPage() {
       {/* Coluna da Direita: Resumo e Comunicados */}
       <div className="lg:col-span-1 space-y-6">
         
-        {/* Componente que tem o Botão do WhatsApp Corrigido */}
+        {/* Usando o componente interno definido acima */}
         <ResumoViagem viagem={viagem} gestor={gestor} />
 
-        {/* Card de Comunicados (Recriado aqui caso você não tenha o arquivo separado) */}
+        {/* Card de Comunicados */}
         <Card className="border-0 shadow-md bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
