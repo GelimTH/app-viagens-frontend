@@ -122,7 +122,7 @@ export const api = {
     return response.data; // Retorna a lista de convites
   },
 
-  // ADICIONE ESTA NOVA FUNÇÃO DE UPLOAD
+  // ADICIONE ESTA NOVA FUNÇÃO DE UPLOAd
   uploadFile: async (file) => {
     const formData = new FormData();
     formData.append('file', file); // 'file' deve ser o mesmo nome usado no `upload.single('file')` do backend
