@@ -5,9 +5,9 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, MapPin, User, MessageCircle, Megaphone, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TimelineItem from '@/components/minha-viagem/TimelineItem'; // Certifique-se que este existe
+import TimelineItem from '@/components/minha-viagem/TimelineItem'; 
 
-// --- COMPONENTE INTERNO: RESUMO VIAGEM (Com botão WhatsApp corrigido) ---
+// --- 1. COMPONENTE INTERNO: RESUMO VIAGEM (Aqui dentro para não dar erro de arquivo faltando) ---
 function ResumoViagem({ viagem, gestor }) {
   // Lógica do Telefone (Real ou Fake para Sprint)
   const telefoneReal = gestor?.profile?.telefone;
@@ -85,7 +85,7 @@ function ResumoViagem({ viagem, gestor }) {
   );
 }
 
-// --- PÁGINA PRINCIPAL: VISÃO GERAL ---
+// --- 2. PÁGINA PRINCIPAL: VISÃO GERAL ---
 export default function VisaoGeralPage() {
   const { dadosViagem } = useOutletContext();
 
@@ -134,7 +134,7 @@ export default function VisaoGeralPage() {
       {/* Coluna da Direita: Resumo e Comunicados */}
       <div className="lg:col-span-1 space-y-6">
         
-        {/* Usando o componente interno definido acima */}
+        {/* USANDO O COMPONENTE INTERNO (Sem Import) */}
         <ResumoViagem viagem={viagem} gestor={gestor} />
 
         {/* Card de Comunicados */}
