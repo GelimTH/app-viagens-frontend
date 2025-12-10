@@ -7,7 +7,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ModalTermos from "@/components/minha-viagem/ModalTermos";
 
-// As Abas de Navegação
+// As Abas de Navegação (Design Original)
 const tabs = [
   { name: 'Visão Geral', to: '.' },
   { name: 'Itinerário', to: './itinerario' },
@@ -74,7 +74,7 @@ export default function MinhaViagemLayout() {
   if (!dadosViagem?.viagem) return null;
 
   const gestorNome = dadosViagem.gestor?.fullName || 'Organização';
-  // Link FAKE estático solicitado para a Sprint
+  // Link FAKE estático solicitado
   const whatsappFakeLink = "https://wa.me/5511999999999"; 
 
   return (
@@ -89,46 +89,42 @@ export default function MinhaViagemLayout() {
         dadosViagem={dadosViagem?.viagem}
       />
 
-      {/* --- CABEÇALHO (Top Header) --- */}
-      <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* --- CABEÇALHO (Com Design Azul Original) --- */}
+      <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         
-        {/* Lado Esquerdo: Ícone e Título */}
+        {/* Lado Esquerdo: Título e Ícone */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
             <Plane className="w-7 h-7 text-white" />
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Meu Itinerário</h1>
             <p className="text-slate-500">
-              Missão para <span className="font-semibold text-emerald-600">{dadosViagem.viagem.destino}</span>
+              Missão para <span className="font-semibold text-blue-600">{dadosViagem.viagem.destino}</span>
             </p>
           </div>
         </div>
 
-        {/* Lado Direito: GESTOR + BOTÃO FAKE (Aqui está o que você pediu) */}
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 md:min-w-[300px]">
-          <div className="flex-1">
-            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">
-              Organizada por:
-            </p>
-            <p className="text-sm font-bold text-slate-800 truncate" title={gestorNome}>
-              {gestorNome}
-            </p>
-          </div>
+        {/* Lado Direito: GESTOR + BOTÃO FAKE (Juntos, como pedido) */}
+        <div className="flex flex-col items-start md:items-end gap-2">
+          <p className="text-sm text-slate-500">
+            Organizada por: <span className="font-semibold text-slate-800">{gestorNome}</span>
+          </p>
           
           <a href={whatsappFakeLink} target="_blank" rel="noopener noreferrer">
             <Button 
+              variant="outline" 
               size="sm" 
-              className="bg-green-600 hover:bg-green-700 text-white shadow-green-200 shadow-md h-9 px-3"
+              className="border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 bg-white"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
-              Falar
+              Falar com Gestor
             </Button>
           </a>
         </div>
       </div>
 
-      {/* --- MENU DE ABAS (Tabs) --- */}
+      {/* --- MENU DE ABAS (Azul Original) --- */}
       <div className="max-w-7xl mx-auto border-b border-slate-200 mb-8">
         <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
           {tabs.map((tab) => {
@@ -141,7 +137,7 @@ export default function MinhaViagemLayout() {
                 className={`
                   whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
                   ${isActive
-                    ? 'border-green-600 text-green-700'
+                    ? 'border-blue-600 text-blue-600' // Azul original
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
                 `}
               >
@@ -152,7 +148,7 @@ export default function MinhaViagemLayout() {
         </nav>
       </div>
 
-      {/* Botão Sair (Mobile/Desktop) */}
+      {/* Botão Sair Mobile */}
       <div className="absolute top-4 right-4 md:hidden">
          <button onClick={handleLogout} className="text-slate-400 hover:text-red-500">
            <LogOut className="w-5 h-5" />
@@ -162,6 +158,13 @@ export default function MinhaViagemLayout() {
       {/* --- CONTEÚDO DA PÁGINA --- */}
       <div className="max-w-7xl mx-auto pb-20">
         <Outlet context={{ dadosViagem }} />
+      </div>
+
+      {/* Botão Sair Desktop (Rodapé) */}
+      <div className="fixed bottom-4 left-4 hidden md:block">
+        <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1">
+          <LogOut className="w-3 h-3" /> Sair do sistema
+        </button>
       </div>
       
     </div>
