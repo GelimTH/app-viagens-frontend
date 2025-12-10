@@ -187,4 +187,34 @@ export const api = {
     const response = await apiClient.patch(`/admin/users/${id}`, { role });
     return response.data;
   },
+
+// Busca dados da "Minha Viagem" (Visitante)
+  getMinhaViagem: async () => {
+    const response = await apiClient.get('/viagens/minha-viagem');
+    return response.data;
+  },
+
+  // Registra o aceite dos termos (Tarefa 1/2)
+  aceitarTermos: async () => {
+    const response = await apiClient.patch('/visitante/aceitar-termos');
+    return response.data;
+  },
+
+  // Busca lista de participantes para o Gestor (Tarefa 3)
+  getParticipantesViagem: async (viagemId) => {
+    const response = await apiClient.get(`/viagens/${viagemId}/participantes`);
+    return response.data;
+  },
+
+  // Busca dados de uma viagem específica (usado na edição)
+  getViagem: async (id) => {
+    const response = await apiClient.get(`/viagens/${id}`);
+    return response.data;
+  },
+  
+  // Atualiza viagem
+  updateViagem: async (id, data) => {
+    const response = await apiClient.put(`/viagens/${id}`, data);
+    return response.data;
+  }
 };

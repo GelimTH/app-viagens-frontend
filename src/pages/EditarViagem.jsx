@@ -1,112 +1,138 @@
 // src/pages/EditarViagem.jsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
-import FormularioViagem from '../components/nova-viagem/FormularioViagem';
-import { Edit } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Map, Users } from 'lucide-react';
 
-// Função para formatar a data para o input type="date" (AAAA-MM-DD)
-const formatarDataParaInput = (data) => {
-  if (!data) return '';
-  const dataObj = new Date(data);
-  // Usamos getUTC... para evitar problemas com fuso horário
-  const ano = dataObj.getUTCFullYear();
-  const mes = String(dataObj.getUTCMonth() + 1).padStart(2, '0');
-  const dia = String(dataObj.getUTCDate()).padStart(2, '0');
-  return `${ano}-${mes}-${dia}`;
-};
+// Importação dos componentes internos
+import FormularioViagem from '@/components/viagem/FormularioViagem';
+import ListaParticipantes from '@/components/viagem/ListaParticipantes'; // Componente criado no passo anterior
 
 export default function EditarViagem() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // 1. Busca os dados da viagem específica para preencher o formulário
-  const { data: viagem, isLoading, error } = useQuery({
+  // Busca os dados da viagem
+  const { data: viagem, isLoading } = useQuery({
     queryKey: ['viagem', id],
-    queryFn: () => api.getViagemById(id),
+    queryFn: () => api.getViagem(id),
   });
 
-  // 2. A mutação para ATUALIZAR a viagem
-  const atualizarViagemMutation = useMutation({
-    mutationFn: api.updateViagem, // Usa a nossa nova função da API
+  // Mutation para atualizar a viagem (usada pelo formulário)
+  const updateMutation = useMutation({
+    mutationFn: (dadosAtualizados) => api.updateViagem(id, dadosAtualizados),
     onSuccess: () => {
-      // Invalida as queries para forçar a atualização dos dados em todo o app
-      queryClient.invalidateQueries({ queryKey: ['viagens'] });
-      queryClient.invalidateQueries({ queryKey: ['viagem', id] });
-      // Navega de volta para o histórico
-      navigate('/app/historico');
+      queryClient.invalidateQueries(['viagem', id]);
+      queryClient.invalidateQueries(['viagens']);
+      alert('Viagem atualizada com sucesso!');
     },
-    onError: (err) => {
-        console.error("Erro ao atualizar viagem:", err);
-        alert("Não foi possível atualizar a viagem.");
+    onError: (error) => {
+      console.error("Erro ao atualizar:", error);
+      alert('Erro ao atualizar viagem.');
     }
   });
-
-  // 3. Função chamada pelo formulário ao ser submetido
-  const handleUpdateViagem = (dadosDoFormulario) => {
-    // Renomeia os campos para corresponder ao backend (camelCase)
-    const dadosParaAtualizar = {
-      id: Number(id), // O id é necessário para a função updateViagem
-      origem: dadosDoFormulario.origem,
-      destino: dadosDoFormulario.destino,
-      dataIda: dadosDoFormulario.data_ida, // O formulário usa data_ida
-      dataVolta: dadosDoFormulario.data_volta, // O formulário usa data_volta
-      motivo: dadosDoFormulario.motivo,
-    };
-    atualizarViagemMutation.mutate(dadosParaAtualizar);
-  };
-  
-  // 4. Prepara os dados iniciais do formulário (só quando a viagem for carregada)
-  const [dadosIniciais, setDadosIniciais] = useState(null);
-
-  useEffect(() => {
-    if (viagem) {
-      setDadosIniciais({
-        origem: viagem.origem,
-        destino: viagem.destino,
-        // O formulário espera data_ida, mas a API envia dataIda
-        data_ida: formatarDataParaInput(viagem.dataIda),
-        data_volta: formatarDataParaInput(viagem.dataVolta),
-        motivo: viagem.motivo,
-      });
-    }
-  }, [viagem]);
-
 
   if (isLoading) {
-    return <div>A carregar dados da viagem...</div>;
+    return (
+      <div className="flex justify-center h-screen items-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  if (error) {
-    return <div>Ocorreu um erro ao buscar os dados da viagem.</div>;
+  if (!viagem) {
+    return <div className="text-center py-10">Viagem não encontrada.</div>;
   }
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        
+        {/* Cabeçalho */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Edit className="w-7 h-7 text-white" />
-          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate('/dashboard')}
+            className="hover:bg-white"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </Button>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Editar Missão</h1>
-            <p className="text-slate-600">Altere os detalhes da sua missão para {viagem.destino}.</p>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <Map className="w-6 h-6 text-blue-600" />
+              Editar Missão
+            </h1>
+            <p className="text-slate-500 text-sm">
+              Gerencie os detalhes e participantes de "{viagem.destino}"
+            </p>
           </div>
         </div>
 
-        {/* O formulário só é renderizado quando os dados iniciais estiverem prontos.
-          Isso garante que o formulário apareça já preenchido.
-        */}
-        {dadosIniciais && (
-          <FormularioViagem
-            onSubmit={handleUpdateViagem}
-            carregando={atualizarViagemMutation.isPending}
-            dadosIniciais={dadosIniciais}
-          />
-        )}
+        {/* Sistema de Abas */}
+        <Tabs defaultValue="detalhes" className="w-full">
+          <TabsList className="bg-white border border-slate-200 p-1 mb-6">
+            <TabsTrigger 
+              value="detalhes"
+              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
+            >
+              <Map className="w-4 h-4 mr-2" />
+              Detalhes da Missão
+            </TabsTrigger>
+            <TabsTrigger 
+              value="participantes"
+              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Gestão de Participantes
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Conteúdo: Detalhes (Formulário) */}
+          <TabsContent value="detalhes">
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <CardTitle>Informações Principais</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <FormularioViagem 
+                  initialData={viagem}
+                  onSubmit={(dados) => updateMutation.mutate(dados)}
+                  isLoading={updateMutation.isPending}
+                  botaoTexto="Salvar Alterações"
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Conteúdo: Participantes (Nova Lista) */}
+          <TabsContent value="participantes">
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Participantes Confirmados</CardTitle>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Visualize contratos assinados e dados médicos.
+                  </p>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                    Total: {viagem._count?.convites || 0} Convites
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6 bg-slate-50/50 min-h-[400px]">
+                {/* Aqui entra o componente que criamos no passo D */}
+                <ListaParticipantes viagemId={id} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
