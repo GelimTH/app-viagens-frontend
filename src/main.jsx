@@ -64,7 +64,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="admin" element={<AdminUsuarios />} />
 
               <Route path="minha-viagem" element={<MinhaViagemLayout />}>
-                <Route index element={<VisaoGeralPage />} />
                 <Route index element={<VisaoGeralViagemPage />} />
                 <Route path="itinerario" element={<ItinerarioViagemPage />} />
                 <Route path="hotel" element={<HotelViagemPage />} />
